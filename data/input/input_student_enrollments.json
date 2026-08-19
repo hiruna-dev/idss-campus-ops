@@ -1,0 +1,1433 @@
+[
+  {
+    "student_id": "STU_001",
+    "name": "A. Perera",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_002",
+    "name": "B. Silva",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_003",
+    "name": "C. Fernando",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_004",
+    "name": "D. Wijesinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_005",
+    "name": "E. Gunawardena",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_006",
+    "name": "F. Rajapaksa",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_007",
+    "name": "G. Bandara",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_008",
+    "name": "H. Jayawardena",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_009",
+    "name": "I. De Silva",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_010",
+    "name": "J. Senanayake",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_011",
+    "name": "K. Wickramasinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_012",
+    "name": "L. Gunasekara",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_013",
+    "name": "M. Liyanage",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_014",
+    "name": "N. Mendis",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_015",
+    "name": "P. Ranasinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_016",
+    "name": "R. Dissanayake",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_017",
+    "name": "S. Abeysekara",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_018",
+    "name": "T. Pathirana",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_019",
+    "name": "U. Kumara",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_020",
+    "name": "V. Jayasinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_021",
+    "name": "W. Cooray",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_022",
+    "name": "Y. Pillai",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_023",
+    "name": "A. Nadarajah",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_024",
+    "name": "B. Ramanathan",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_025",
+    "name": "C. Suresh",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_026",
+    "name": "D. Khan",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_027",
+    "name": "E. Rahman",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_028",
+    "name": "F. Fernandopulle",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_029",
+    "name": "G. Wijegoonewardena",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_030",
+    "name": "H. Tennekoon",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_031",
+    "name": "I. Rajakaruna",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_032",
+    "name": "J. Hettiarachchi",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_033",
+    "name": "K. Weerasinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_034",
+    "name": "L. Amarasinghe",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_035",
+    "name": "M. Jayasuriya",
+    "year": 1,
+    "enrolled_courses": [
+      "OOP101",
+      "NET102",
+      "WEB101"
+    ]
+  },
+  {
+    "student_id": "STU_036",
+    "name": "N. Wickramaarachchi",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_037",
+    "name": "P. Ilangakoon",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_038",
+    "name": "R. Madushanka",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_039",
+    "name": "S. Seneviratne",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_040",
+    "name": "T. Rajapakse",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_041",
+    "name": "U. Wijeratne",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_042",
+    "name": "V. Gunaratne",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_043",
+    "name": "W. Herath",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_044",
+    "name": "Y. Nawaratne",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_045",
+    "name": "A. Perera",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_046",
+    "name": "B. Silva",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_047",
+    "name": "C. Fernando",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_048",
+    "name": "D. Wijesinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_049",
+    "name": "E. Gunawardena",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_050",
+    "name": "F. Rajapaksa",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_051",
+    "name": "G. Bandara",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_052",
+    "name": "H. Jayawardena",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_053",
+    "name": "I. De Silva",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_054",
+    "name": "J. Senanayake",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_055",
+    "name": "K. Wickramasinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_056",
+    "name": "L. Gunasekara",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_057",
+    "name": "M. Liyanage",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_058",
+    "name": "N. Mendis",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_059",
+    "name": "P. Ranasinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_060",
+    "name": "R. Dissanayake",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_061",
+    "name": "S. Abeysekara",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_062",
+    "name": "T. Pathirana",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_063",
+    "name": "U. Kumara",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_064",
+    "name": "V. Jayasinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_065",
+    "name": "W. Cooray",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_066",
+    "name": "Y. Pillai",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_067",
+    "name": "A. Nadarajah",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_068",
+    "name": "B. Ramanathan",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_069",
+    "name": "C. Suresh",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_070",
+    "name": "D. Khan",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_071",
+    "name": "E. Rahman",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_072",
+    "name": "F. Fernandopulle",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_073",
+    "name": "G. Wijegoonewardena",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_074",
+    "name": "H. Tennekoon",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_075",
+    "name": "I. Rajakaruna",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_076",
+    "name": "J. Hettiarachchi",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_077",
+    "name": "K. Weerasinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_078",
+    "name": "L. Amarasinghe",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_079",
+    "name": "M. Jayasuriya",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_080",
+    "name": "N. Wickramaarachchi",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_081",
+    "name": "P. Ilangakoon",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_082",
+    "name": "R. Madushanka",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_083",
+    "name": "S. Seneviratne",
+    "year": 2,
+    "enrolled_courses": [
+      "PDSA201",
+      "DMS201",
+      "SWE202"
+    ]
+  },
+  {
+    "student_id": "STU_084",
+    "name": "T. Rajapakse",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_085",
+    "name": "U. Wijeratne",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_086",
+    "name": "V. Gunaratne",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_087",
+    "name": "W. Herath",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_088",
+    "name": "Y. Nawaratne",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_089",
+    "name": "A. Perera",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_090",
+    "name": "B. Silva",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_091",
+    "name": "C. Fernando",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_092",
+    "name": "D. Wijesinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_093",
+    "name": "E. Gunawardena",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_094",
+    "name": "F. Rajapaksa",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_095",
+    "name": "G. Bandara",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_096",
+    "name": "H. Jayawardena",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_097",
+    "name": "I. De Silva",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_098",
+    "name": "J. Senanayake",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_099",
+    "name": "K. Wickramasinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_100",
+    "name": "L. Gunasekara",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_101",
+    "name": "M. Liyanage",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_102",
+    "name": "N. Mendis",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_103",
+    "name": "P. Ranasinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_104",
+    "name": "R. Dissanayake",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_105",
+    "name": "S. Abeysekara",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_106",
+    "name": "T. Pathirana",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_107",
+    "name": "U. Kumara",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_108",
+    "name": "V. Jayasinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_109",
+    "name": "W. Cooray",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_110",
+    "name": "Y. Pillai",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_111",
+    "name": "A. Nadarajah",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_112",
+    "name": "B. Ramanathan",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_113",
+    "name": "C. Suresh",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_114",
+    "name": "D. Khan",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_115",
+    "name": "E. Rahman",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_116",
+    "name": "F. Fernandopulle",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_117",
+    "name": "G. Wijegoonewardena",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_118",
+    "name": "H. Tennekoon",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_119",
+    "name": "I. Rajakaruna",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_120",
+    "name": "J. Hettiarachchi",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_121",
+    "name": "K. Weerasinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_122",
+    "name": "L. Amarasinghe",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302"
+    ]
+  },
+  {
+    "student_id": "STU_123",
+    "name": "M. Jayasuriya",
+    "year": 3,
+    "enrolled_courses": [
+      "DBS301",
+      "OS302"
+    ]
+  },
+  {
+    "student_id": "STU_124",
+    "name": "N. Wickramaarachchi",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_125",
+    "name": "P. Ilangakoon",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_126",
+    "name": "R. Madushanka",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401",
+      "AI303"
+    ]
+  },
+  {
+    "student_id": "STU_127",
+    "name": "S. Seneviratne",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_128",
+    "name": "T. Rajapakse",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_129",
+    "name": "U. Wijeratne",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_130",
+    "name": "V. Gunaratne",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_131",
+    "name": "W. Herath",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_132",
+    "name": "Y. Nawaratne",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_133",
+    "name": "A. Perera",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_134",
+    "name": "B. Silva",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_135",
+    "name": "C. Fernando",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_136",
+    "name": "D. Wijesinghe",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_137",
+    "name": "E. Gunawardena",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_138",
+    "name": "F. Rajapaksa",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_139",
+    "name": "G. Bandara",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_140",
+    "name": "H. Jayawardena",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_141",
+    "name": "I. De Silva",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_142",
+    "name": "J. Senanayake",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_143",
+    "name": "K. Wickramasinghe",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_144",
+    "name": "L. Gunasekara",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_145",
+    "name": "M. Liyanage",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_146",
+    "name": "N. Mendis",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_147",
+    "name": "P. Ranasinghe",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  },
+  {
+    "student_id": "STU_148",
+    "name": "R. Dissanayake",
+    "year": 4,
+    "enrolled_courses": [
+      "ISM401"
+    ]
+  }
+]

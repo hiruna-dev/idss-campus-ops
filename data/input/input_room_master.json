@@ -1,0 +1,92 @@
+[
+  {
+    "room_id": "R101",
+    "room_name": "Lecture Theatre 101",
+    "floor": 1,
+    "capacity": 60,
+    "has_ac": true,
+    "noise_level": 4,
+    "accessibility_score": 5,
+    "is_accessible": true
+  },
+  {
+    "room_id": "R102",
+    "room_name": "Lecture Theatre 102",
+    "floor": 1,
+    "capacity": 50,
+    "has_ac": true,
+    "noise_level": 3,
+    "accessibility_score": 5,
+    "is_accessible": true
+  },
+  {
+    "room_id": "R103",
+    "room_name": "Room 103",
+    "floor": 1,
+    "capacity": 40,
+    "has_ac": false,
+    "noise_level": 2,
+    "accessibility_score": 3,
+    "is_accessible": false
+  },
+  {
+    "room_id": "R201",
+    "room_name": "Lecture Theatre 201",
+    "floor": 2,
+    "capacity": 80,
+    "has_ac": true,
+    "noise_level": 5,
+    "accessibility_score": 4,
+    "is_accessible": true
+  },
+  {
+    "room_id": "R202",
+    "room_name": "Seminar Room 202",
+    "floor": 2,
+    "capacity": 30,
+    "has_ac": true,
+    "noise_level": 3,
+    "accessibility_score": 4,
+    "is_accessible": true
+  },
+  {
+    "room_id": "R203",
+    "room_name": "Room 203",
+    "floor": 2,
+    "capacity": 45,
+    "has_ac": false,
+    "noise_level": 2,
+    "accessibility_score": 2,
+    "is_accessible": false
+  },
+  {
+    "room_id": "R301",
+    "room_name": "Lecture Theatre 301",
+    "floor": 3,
+    "capacity": 100,
+    "has_ac": true,
+    "noise_level": 5,
+    "accessibility_score": 2,
+    "is_accessible": false
+  },
+  {
+    "room_id": "R302",
+    "room_name": "Lab 302",
+    "floor": 3,
+    "capacity": 25,
+    "has_ac": true,
+    "noise_level": 4,
+    "accessibility_score": 2,
+    "is_accessible": false
+  },
+  {
+    "room_id": "LAB_3A",
+    "room_name": "Computer Lab 3A",
+    "floor": 3,
+    "capacity": 35,
+    "has_ac": true,
+    "noise_level": 3,
+    "accessibility_score": 2,
+    "is_accessible": false
+  }
+]

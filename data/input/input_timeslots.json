@@ -1,0 +1,50 @@
+[
+  {
+    "slot_id": "SLOT_01",
+    "date": "2026-08-20",
+    "session": "Morning",
+    "start_time": "09:00",
+    "end_time": "12:00",
+    "max_exams_parallel": 3
+  },
+  {
+    "slot_id": "SLOT_02",
+    "date": "2026-08-20",
+    "session": "Afternoon",
+    "start_time": "13:30",
+    "end_time": "16:30",
+    "max_exams_parallel": 3
+  },
+  {
+    "slot_id": "SLOT_03",
+    "date": "2026-08-21",
+    "session": "Morning",
+    "start_time": "09:00",
+    "end_time": "12:00",
+    "max_exams_parallel": 3
+  },
+  {
+    "slot_id": "SLOT_04",
+    "date": "2026-08-21",
+    "session": "Afternoon",
+    "start_time": "13:30",
+    "end_time": "16:30",
+    "max_exams_parallel": 3
+  },
+  {
+    "slot_id": "SLOT_05",
+    "date": "2026-08-22",
+    "session": "Morning",
+    "start_time": "09:00",
+    "end_time": "12:00",
+    "max_exams_parallel": 3
+  },
+  {
+    "slot_id": "SLOT_06",
+    "date": "2026-08-22",
+    "session": "Afternoon",
+    "start_time": "13:30",
+    "end_time": "16:30",
+    "max_exams_parallel": 3
+  }
+]

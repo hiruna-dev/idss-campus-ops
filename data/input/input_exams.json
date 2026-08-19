@@ -1,0 +1,102 @@
+[
+  {
+    "exam_id": "EX_101",
+    "course_code": "PDSA201",
+    "course_title": "Data Structures & Algorithms",
+    "duration_hours": 3,
+    "student_count": 48,
+    "year": 2,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_102",
+    "course_code": "NET102",
+    "course_title": "Computer Networks",
+    "duration_hours": 3,
+    "student_count": 35,
+    "year": 1,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_103",
+    "course_code": "DMS201",
+    "course_title": "Discrete Mathematics",
+    "duration_hours": 3,
+    "student_count": 48,
+    "year": 2,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_104",
+    "course_code": "OOP101",
+    "course_title": "Object Oriented Programming",
+    "duration_hours": 3,
+    "student_count": 35,
+    "year": 1,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_105",
+    "course_code": "DBS301",
+    "course_title": "Database Systems",
+    "duration_hours": 3,
+    "student_count": 40,
+    "year": 3,
+    "department": "School of Computing",
+    "requires_accessibility": true
+  },
+  {
+    "exam_id": "EX_106",
+    "course_code": "SWE202",
+    "course_title": "Software Engineering",
+    "duration_hours": 3,
+    "student_count": 48,
+    "year": 2,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_107",
+    "course_code": "OS302",
+    "course_title": "Operating Systems",
+    "duration_hours": 3,
+    "student_count": 40,
+    "year": 3,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_108",
+    "course_code": "AI303",
+    "course_title": "Artificial Intelligence",
+    "duration_hours": 3,
+    "student_count": 41,
+    "year": 3,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_109",
+    "course_code": "WEB101",
+    "course_title": "Web Development",
+    "duration_hours": 3,
+    "student_count": 35,
+    "year": 1,
+    "department": "School of Computing",
+    "requires_accessibility": false
+  },
+  {
+    "exam_id": "EX_110",
+    "course_code": "ISM401",
+    "course_title": "Information Security Management",
+    "duration_hours": 3,
+    "student_count": 25,
+    "year": 4,
+    "department": "School of Computing",
+    "requires_accessibility": true
+  }
+]
