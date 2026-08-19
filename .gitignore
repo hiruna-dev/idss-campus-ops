@@ -1,0 +1,29 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+
+# Runtime-generated shared outputs (master_context_file.md Section 8.1)
+data/shared/*.json
+
+# Keep the shared directory tracked but empty
+!data/shared/.gitkeep
