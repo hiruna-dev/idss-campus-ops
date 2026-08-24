@@ -40,10 +40,7 @@ All eight modules (common + gateway + task1..task5) must compile and tests must 
 MongoDB → task3 &amp; task4 → task5 → task2 → task1 → gateway → frontend
 
 ```bash
-# Start MongoDB
-docker compose up -d mongodb
-
-# Build and start each service
+# Ensure MongoDB Atlas cluster is accessible (see .env)
 mvn clean install
 java -jar gateway/target/gateway.jar
 java -jar task3/target/task3.jar
