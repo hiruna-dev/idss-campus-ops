@@ -2,6 +2,7 @@ package com.idss.task4.service;
 
 import com.idss.common.model.Room;
 import com.idss.common.util.JsonLoader;
+import com.idss.task4.algorithm.AHPEngine;
 import com.idss.task4.algorithm.FilterEngine;
 import com.idss.task4.algorithm.RoomRegistry;
 import com.idss.task4.algorithm.TOPSISEngine;
@@ -41,11 +42,16 @@ public class RankingService {
 
     private RoomRegistry roomRegistry;
     private final FilterEngine filterEngine;
+    private final AHPEngine ahpEngine;
     private final TOPSISEngine topsisEngine;
 
     public RankingService() {
         this.filterEngine = new FilterEngine();
-        this.topsisEngine = new TOPSISEngine();
+        // Weights are derived via AHP (task_4_plan.md Section 6) rather than
+        // asserted — see AHPEngine for the pairwise comparison + CR check.
+        this.ahpEngine = new AHPEngine();
+        double[] w = ahpEngine.getWeights();
+        this.topsisEngine = new TOPSISEngine(w[0], w[1], w[2]);
     }
 
     /**
@@ -142,5 +148,13 @@ public class RankingService {
      */
     public TOPSISEngine getTopsisEngine() {
         return topsisEngine;
+    }
+
+    /**
+     * Returns the AHP engine (for benchmarking/testing access to the
+     * derived weights and Consistency Ratio).
+     */
+    public AHPEngine getAhpEngine() {
+        return ahpEngine;
     }
 }
