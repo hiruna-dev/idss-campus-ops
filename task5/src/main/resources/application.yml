@@ -1,0 +1,31 @@
+server:
+  port: 8085
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/idss}
+  application:
+    name: task5-timetable-service
+
+task5:
+  data:
+    input-dir: ../data/input
+    output-dir: ../data/shared
+  algorithm:
+    default: GA
+    ga:
+      population-size: 100
+      generations: 500
+      mutation-rate: 0.05
+      tournament-size: 5
+      hill-climbing-top-n: 5
+    sa:
+      initial-temperature: 1000
+      cooling-rate: 0.95
+      min-temperature: 1
+  fatigue:
+    hard-weight: 1000
+    back-to-back-weight: 10
+    same-day-weight: 5
+    consecutive-day-weight: 1
