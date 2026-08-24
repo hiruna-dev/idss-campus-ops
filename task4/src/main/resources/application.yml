@@ -1,0 +1,13 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: task4-room-ranking
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/idss
+      database: idss
+
+# Task 4 uses JSON file I/O for algorithm benchmarking (not Mongo queries)
+# Mongo is used only for persisting final output (master_context_file.md Section 2.4)
