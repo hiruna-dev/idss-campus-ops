@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
@@ -13,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "IDSS — University Exam Operations",
   description: "Intelligent Decision Support System for Campus & Exam Operations",
 };
@@ -27,7 +26,7 @@ const navItems = [
   { href: "/task5", label: "Task 5 — Timetable" },
 ];
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }) {
   return (
     <html
       lang="en"

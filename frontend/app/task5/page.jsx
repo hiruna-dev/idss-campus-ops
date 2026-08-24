@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import MetricsBar from "@/components/MetricsBar";
-import type { Metrics } from "@/lib/api";
 
 export default function Task5Page() {
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [result, setResult] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const runAlgorithm = async () => {
     setLoading(true);
@@ -21,13 +20,24 @@ export default function Task5Page() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      setResult((json.data ?? json) as Record<string, unknown>);
+      setResult(json.data ?? json);
       setMetrics(json.metrics ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
       setLoading(false);
     }
+  };
+
+  const exportJson = () => {
+    if (!result) return;
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "output_master_schedule.json";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -52,7 +62,10 @@ export default function Task5Page() {
             <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50">
               Validate
             </button>
-            <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50">
+            <button
+              onClick={exportJson}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50"
+            >
               Export JSON
             </button>
           </div>

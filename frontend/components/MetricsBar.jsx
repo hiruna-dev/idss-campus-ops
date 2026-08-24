@@ -1,10 +1,4 @@
-import type { Metrics } from "@/lib/api";
-
-interface Props {
-  metrics: Metrics | null;
-}
-
-export default function MetricsBar({ metrics }: Props) {
+export default function MetricsBar({ metrics }) {
   if (!metrics) {
     return (
       <div className="flex gap-4 rounded-lg bg-card px-4 py-2 text-sm text-gray-400 shadow">
