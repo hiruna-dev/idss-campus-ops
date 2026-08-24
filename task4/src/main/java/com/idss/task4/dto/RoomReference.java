@@ -43,7 +43,10 @@ public class RoomReference {
     public int getFloor() { return floor; }
     public void setFloor(int floor) { this.floor = floor; }
 
+    @JsonProperty("is_accessible")
     public boolean isAccessible() { return isAccessible; }
+
+    @JsonProperty("is_accessible")
     public void setAccessible(boolean accessible) { isAccessible = accessible; }
 
     @Override
