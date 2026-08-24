@@ -3,28 +3,28 @@
 Intelligent Decision Support System (IDSS) for University Campus &amp; Exam Operations.
 BSc (Hons) Computing 26.1 | PDSA | Single Building Campus.
 
-This repository is a multi-module Maven project initialized from
-`guidelines/master_context_file.md` (MCF v1.0) and
-`guidelines/group_data_contracts.md` (Canonical Contracts v1.0).
+This repository is a multi-module Maven project based on
+`docs/master_context_file.md` (MCF v2.0) and
+`docs/group_data_contracts.md` (Canonical Contracts v1.0).
 
 ## Modules
 
-| Module  | Package           | Responsibility                                      |
-|---------|-------------------|-----------------------------------------------------|
-| common  | com.idss.common   | Shared models, JSON loader, Mongo connection, theme |
-| task1   | com.idss.task1    | Paper logistics &amp; routing (A*)                   |
-| task2   | com.idss.task2    | Invigilator assignment (Hungarian)                  |
-| task3   | com.idss.task3    | Clash detection (DSATUR)                            |
-| task4   | com.idss.task4    | Room ranking (AHP + TOPSIS)                         |
-| task5   | com.idss.task5    | Timetable optimization (GA + SA + Greedy)           |
+| Module  | Package           | Port | Responsibility                                      |
+|---------|-------------------|------|-----------------------------------------------------|
+| common  | com.idss.common   | —    | Shared models, JSON loader, Mongo connection, canonical mapping |
+| gateway | com.idss.gateway  | 8080 | Spring Cloud Gateway — routes + CORS                |
+| task1   | com.idss.task1    | 8081 | Paper logistics &amp; routing (A*)                   |
+| task2   | com.idss.task2    | 8082 | Invigilator assignment (Hungarian)                  |
+| task3   | com.idss.task3    | 8083 | Clash detection (DSATUR)                            |
+| task4   | com.idss.task4    | 8084 | Room ranking (AHP + TOPSIS)                         |
+| task5   | com.idss.task5    | 8085 | Timetable optimization (GA + SA + Greedy)           |
 
 ## Tech Stack (Locked)
 
-- Java 17+, Maven 3.9+
-- MongoDB driver `mongodb-driver-sync:4.11.1`
-- Jackson `jackson-databind:2.16.1` + `jackson-datatype-jsr310:2.16.1`
-- dotenv-java `3.0.0`
-- JUnit 5 `junit-jupiter:5.10.1`
+- **Backend:** Java 17+, Spring Boot 3.2.5, Maven, Spring Cloud Gateway
+- **Frontend:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
+- **DB:** MongoDB 7 (`idss` database, one collection per output type)
+- **Testing:** JUnit 5 (via spring-boot-starter-test)
 
 ## Build
 
@@ -32,19 +32,31 @@ This repository is a multi-module Maven project initialized from
 mvn clean install
 ```
 
-All six modules (common + task1..task5) must compile and tests must pass.
+All eight modules (common + gateway + task1..task5) must compile and tests must pass.
 
 ## Run
 
+**Startup order (MCF Section 2.2):**
+MongoDB → task3 &amp; task4 → task5 → task2 → task1 → gateway → frontend
+
 ```bash
-mvn clean install && java -jar task5/target/task5.jar
+# Start MongoDB
+docker compose up -d mongodb
+
+# Build and start each service
+mvn clean install
+java -jar gateway/target/gateway.jar
+java -jar task3/target/task3.jar
+java -jar task4/target/task4.jar
+java -jar task5/target/task5.jar
+java -jar task2/target/task2.jar
+java -jar task1/target/task1.jar
+
+# Frontend (separate terminal)
+cd frontend &amp;&amp; npm install &amp;&amp; npm run dev
 ```
 
-Build &amp; runtime order (MCF Section 2.2): `task3 + task4 (parallel) -> task5 -> task2 -> task1`.
-Each task module exposes its own main entry point; the integration shell
-launches them in this order. (Task main classes are added by each pair during
-implementation; the `java -jar` command above is the target workflow per
-MCF Section 8.1.)
+The Next.js frontend calls the API Gateway at `http://localhost:8080` only.
 
 ## Configuration
 

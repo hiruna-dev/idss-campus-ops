@@ -21,7 +21,7 @@ import java.io.File;
 public final class MongoConnection {
 
     public static final String DEFAULT_URI = "mongodb://localhost:27017";
-    public static final String DEFAULT_DATABASE = "idss_campus_ops";
+    public static final String DEFAULT_DATABASE = "idss";
 
     private MongoConnection() {
         throw new AssertionError("MongoConnection is a utility; do not instantiate.");

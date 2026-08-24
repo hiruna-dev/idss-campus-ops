@@ -11,23 +11,16 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>task3</artifactId>
+    <artifactId>gateway</artifactId>
     <packaging>jar</packaging>
 
-    <name>IDSS Task 3 - Clash Detection (DSATUR)</name>
+    <name>IDSS API Gateway</name>
+    <description>Spring Cloud Gateway — routes /api/taskN/** to the correct microservice. Handles CORS.</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.idss</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -27,3 +27,12 @@ data/shared/*.json
 
 # Keep the shared directory tracked but empty
 !data/shared/.gitkeep
+
+# Next.js frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+frontend/.env*.local

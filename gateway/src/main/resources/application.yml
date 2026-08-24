@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: task1
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/task1/**
+        - id: task2
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/task2/**
+        - id: task3
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/task3/**
+        - id: task4
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/task4/**
+        - id: task5
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/task5/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - http://localhost:3000
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
