@@ -10,13 +10,17 @@ import com.idss.task4.dto.ExamRequest;
 import com.idss.task4.dto.RoomRanking;
 import com.idss.task4.dto.RoomReference;
 import com.idss.task4.dto.RoomScore;
+import com.idss.task4.repository.RoomRankingDocument;
+import com.idss.task4.repository.RoomRankingRepository;
 
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.PriorityQueue;
 
 /**
@@ -39,13 +43,16 @@ import java.util.PriorityQueue;
 public class RankingService {
 
     private static final String ROOM_MASTER_PATH = "data/input/input_room_master.json";
+    private static final String ALGORITHM_LABEL = "AHP (weights) + TOPSIS (ranking)";
 
     private RoomRegistry roomRegistry;
     private final FilterEngine filterEngine;
     private final AHPEngine ahpEngine;
     private final TOPSISEngine topsisEngine;
+    private final RoomRankingRepository rankingRepository;
 
-    public RankingService() {
+    public RankingService(RoomRankingRepository rankingRepository) {
+        this.rankingRepository = rankingRepository;
         this.filterEngine = new FilterEngine();
         // Weights are derived via AHP (task_4_plan.md Section 6) rather than
         // asserted — see AHPEngine for the pairwise comparison + CR check.
@@ -98,7 +105,24 @@ public class RankingService {
             ));
         }
 
+        // Persist to MongoDB — upsert by examId (which is the @Id)
+        RoomRankingDocument doc = new RoomRankingDocument(
+                exam.getExamId(), ALGORITHM_LABEL, rankings, Instant.now());
+        rankingRepository.save(doc);
+
         return rankings;
+    }
+
+    /**
+     * Retrieves cached rankings for a specific exam from MongoDB.
+     * This backs the {@code GET /rankings/{examId}} endpoint
+     * required by MCF Section 3.4 and task_4_plan.md Section 12.
+     *
+     * @param examId the exam ID to look up (e.g. "EX_101")
+     * @return Optional containing the ranking document, or empty if not yet computed
+     */
+    public Optional<RoomRankingDocument> findRankingsByExamId(String examId) {
+        return rankingRepository.findById(examId);
     }
 
     /**

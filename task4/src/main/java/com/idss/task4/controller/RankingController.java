@@ -4,6 +4,7 @@ import com.idss.common.util.JsonLoader;
 import com.idss.task4.dto.ExamRequest;
 import com.idss.task4.dto.RoomRanking;
 import com.idss.task4.dto.RoomReference;
+import com.idss.task4.repository.RoomRankingDocument;
 import com.idss.task4.service.RankingService;
 
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST controller for Task 4 — Room Ranking.
@@ -98,6 +100,41 @@ public class RankingController {
             error.put("reason", e.getMessage());
             return ResponseEntity.internalServerError().body(error);
         }
+    }
+
+    /**
+     * Retrieves cached rankings for a specific exam from MongoDB.
+     * Required by MCF Section 3.4 and task_4_plan.md Section 12.
+     *
+     * <p>Task 5 calls this endpoint to pull one exam's ranked rooms
+     * without triggering a re-computation. Returns 404 if rankings
+     * have not yet been computed for the given exam.</p>
+     *
+     * @param examId the exam ID (e.g. "EX_101")
+     * @return the rankings list with metadata, or 404 if not found
+     */
+    @GetMapping("/rankings/{examId}")
+    public ResponseEntity<Map<String, Object>> getRankingsForExam(@PathVariable String examId) {
+        Optional<RoomRankingDocument> result = rankingService.findRankingsByExamId(examId);
+
+        if (result.isEmpty()) {
+            Map<String, Object> notFound = new HashMap<>();
+            notFound.put("status", "NOT_FOUND");
+            notFound.put("exam_id", examId);
+            notFound.put("message", "No cached rankings found for exam " + examId +
+                    ". Call POST /rank or POST /rank-all first.");
+            return ResponseEntity.status(404).body(notFound);
+        }
+
+        RoomRankingDocument doc = result.get();
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "OK");
+        response.put("exam_id", doc.getExamId());
+        response.put("algorithm_used", doc.getAlgorithmUsed());
+        response.put("computed_at", doc.getComputedAt().toString());
+        response.put("total_rankings", doc.getRankings().size());
+        response.put("rankings", doc.getRankings());
+        return ResponseEntity.ok(response);
     }
 
     /**
