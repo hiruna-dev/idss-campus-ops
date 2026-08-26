@@ -6,8 +6,8 @@ spring:
     name: task4-room-ranking
   data:
     mongodb:
-      uri: mongodb://localhost:27017/idss
-      database: idss
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: ${MONGO_DATABASE:idss}
 
 # Task 4 uses JSON file I/O for algorithm benchmarking (not Mongo queries)
 # Mongo is used only for persisting final output (master_context_file.md Section 2.4)
