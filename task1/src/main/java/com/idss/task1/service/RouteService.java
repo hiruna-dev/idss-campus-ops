@@ -61,9 +61,9 @@ public class RouteService {
      */
     public synchronized void initializeGraph() {
         try {
-            this.buildingGraph = BuildingGraph.fromFile(buildingGraphPath);
+            this.buildingGraph = BuildingGraph.loadFromJson(buildingGraphPath);
             log.info("Successfully loaded BuildingGraph with {} nodes from '{}'",
-                    buildingGraph.getNodeCount(), buildingGraphPath);
+                    buildingGraph.getVertexCount(), buildingGraphPath);
         } catch (Exception e) {
             log.warn("Could not load BuildingGraph from '{}' (falling back to empty graph): {}",
                     buildingGraphPath, e.getMessage());
@@ -138,16 +138,16 @@ public class RouteService {
         route.setTargetFloor(order.getDestinationFloor());
         route.setRequiresStepFreeAccess(stepFreeRequired);
 
-        if (searchResult.isPathFound()) {
+        if (searchResult.isReachable()) {
             route.setTotalDistanceMeters(searchResult.getTotalDistanceMeters());
             route.setEstimatedTransitTimeSeconds(searchResult.getTotalTransitTimeSeconds());
-            route.setPathSequence(searchResult.getPath());
-            route.setNodesInPathCount(searchResult.getPath().size());
+            route.setPathSequence(searchResult.getPathSequence());
+            route.setNodesInPathCount(searchResult.getPathSequence().size());
 
-            List<TurnByTurnStep> manifest = manifestGenerator.generate(buildingGraph, searchResult.getPath());
+            List<TurnByTurnStep> manifest = manifestGenerator.generate(buildingGraph, searchResult.getPathSequence());
             route.setTurnByTurnManifest(manifest);
 
-            boolean isStepFree = verifyStepFree(searchResult.getPath());
+            boolean isStepFree = verifyStepFree(searchResult.getPathSequence());
             route.setStepFreeVerified(isStepFree);
 
             boolean withinTime = (order.getMaxAllowedTransitSeconds() <= 0)
