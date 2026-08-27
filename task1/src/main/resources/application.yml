@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: task1-routing-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/idss}
+      database: ${MONGO_DATABASE:idss}
+      auto-index-creation: true
+
+idss:
+  task1:
+    building-graph-path: data/input/input_building_graph.json
+    dispatch-orders-path: data/input/input_dispatch_orders.json
+    output-routes-path: data/shared/output_delivery_routes.json
+    output-metrics-path: data/shared/output_routing_metrics.json
