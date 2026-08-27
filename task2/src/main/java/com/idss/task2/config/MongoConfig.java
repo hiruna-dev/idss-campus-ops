@@ -9,17 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 
-/**
- * MongoDB wiring for Task 2 (master_context_file.md Section 2.3 / Section 5).
- *
- * <p>Spring Boot's {@code spring.data.mongodb.uri} property reads from system
- * environment variables, not from the project's gitignored {@code .env} file.
- * To keep a single source of truth, this config reuses {@link MongoConnection}
- * (which loads {@code .env} via dotenv-java, walking up from the module cwd to
- * the project root) and exposes the beans Spring Data MongoDB expects. With a
- * {@link MongoDatabaseFactory} bean present, Spring Boot's Mongo
- * auto-configuration backs off and uses this one.</p>
- */
 @Configuration
 public class MongoConfig {
 
