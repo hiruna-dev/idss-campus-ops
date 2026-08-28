@@ -1,0 +1,7 @@
+[
+  { "exam_id": "EX_101", "room_id": "R101", "rank": 1, "score": 0.87, "meets_hard_constraints": true },
+  { "exam_id": "EX_101", "room_id": "R205", "rank": 2, "score": 0.79, "meets_hard_constraints": true },
+  { "exam_id": "EX_102", "room_id": "R101", "rank": 1, "score": 0.92, "meets_hard_constraints": true },
+  { "exam_id": "EX_103", "room_id": "R205", "rank": 1, "score": 0.81, "meets_hard_constraints": true },
+  { "exam_id": "EX_104", "room_id": "R101", "rank": 1, "score": 0.85, "meets_hard_constraints": true }
+]

@@ -4,9 +4,6 @@ import com.idss.task5.dto.MasterScheduleEntry;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.List;
-
 /**
  * MongoDB repository for master schedule entries.
  * Collection: master_schedules
@@ -14,10 +11,6 @@ import java.util.List;
  */
 @Repository
 public interface ScheduleRepository extends MongoRepository<MasterScheduleEntry, String> {
-
-    Optional<MasterScheduleEntry> findByExam_id(String examId);
-
-    List<MasterScheduleEntry> findByDateAndSession(String date, String session);
-
-    void deleteAllByExam_idIn(List<String> examIds);
+    // Built-in methods used: deleteAll(), saveAll(), findAll()
+    // No custom query methods needed — avoids snake_case parsing issues
 }

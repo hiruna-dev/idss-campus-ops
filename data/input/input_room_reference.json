@@ -1,0 +1,5 @@
+[
+  { "room_id": "R101", "room_name": "Lecture Theatre 101", "floor": 1, "is_accessible": true },
+  { "room_id": "LAB_3A", "room_name": "Computer Lab 3A", "floor": 3, "is_accessible": false },
+  { "room_id": "R205", "room_name": "Lecture Theatre 205", "floor": 2, "is_accessible": true }
+]
