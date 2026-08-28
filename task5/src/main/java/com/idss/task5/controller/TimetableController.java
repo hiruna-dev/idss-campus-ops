@@ -70,4 +70,28 @@ public class TimetableController {
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of("status", "UP", "service", "task5-timetable"));
     }
+
+        /**
+     * POST /api/task5/benchmark
+     * Runs the full benchmark suite (E=10,30,50,100) for all 3 algorithms.
+     * Returns JSON table for Chapter 8 charts.
+     */
+    @PostMapping("/benchmark")
+    public ResponseEntity<?> runBenchmark() {
+        try {
+            List<Map<String, Object>> results = com.idss.task5.benchmark.BenchmarkRunner.runFullBenchmark();
+
+            // Export to file
+            com.idss.task5.benchmark.BenchmarkRunner.exportResults(results, "../data/shared/benchmark_results.json");
+
+            return ResponseEntity.ok(Map.of(
+                "status", "COMPLETED",
+                "results", results
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                Map.of("error", e.getMessage(), "status", "ERROR")
+            );
+        }
+    }
 }
