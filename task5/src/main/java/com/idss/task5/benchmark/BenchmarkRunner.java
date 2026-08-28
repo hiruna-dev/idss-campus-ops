@@ -26,7 +26,7 @@ import java.util.*;
 public class BenchmarkRunner {
 
         private static final int RUNS_PER_SIZE = 5;
-    private static final int[] EXAM_SIZES = {10, 30, 50};
+    private static final int[] EXAM_SIZES = {10, 30, 50, 100};
 
     /**
      * Run the full benchmark suite.
