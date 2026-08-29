@@ -4,16 +4,19 @@ import com.idss.common.model.Student;
 import java.util.*;
 
 /**
- * 2D Conflict Matrix — the core data structure for all 3 algorithms.
- * 
- * matrix[i][j] = number of students taking BOTH exam i and exam j.
- * Built once from student enrollments in O(S * K^2) where S=students, K=max courses per student.
- * Provides O(1) clash checks during fitness evaluation (called 50,000+ times in GA).
- * 
- * Also maintains:
- * - examIndexMap: course_code -> matrix index (O(1) translation)
- * - indexExamMap: matrix index -> course_code (reverse lookup)
- * - degree[]: total clashing students per exam (for Greedy ordering)
+ * 2D Conflict Matrix — core data structure for Task 5 timetable optimization.
+ *
+ * <p>Built from student enrollment data in O(S * K^2) time where S = students,
+ * K = max courses per student. The resulting E x E symmetric matrix stores the
+ * number of shared students between every pair of exams.</p>
+ *
+ * <p>Provides O(1) clash checks, which is critical because the fitness function
+ * is called ~50,000 times during GA evolution (500 generations x 100 population).</p>
+ *
+ * <p>Space complexity: O(E^2) — for 100 exams this is 10,000 ints (~40KB).</p>
+ *
+ * @see GeneticEngine
+ * @see ConstraintValidator
  */
 public class ConflictMatrix {
 

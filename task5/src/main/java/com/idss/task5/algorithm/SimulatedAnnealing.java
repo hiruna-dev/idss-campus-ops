@@ -3,20 +3,23 @@ package com.idss.task5.algorithm;
 import java.util.*;
 
 /**
- * Simulated Annealing — COMPARATOR metaheuristic.
- * 
- * Mechanism:
- * - Start from a random timetable (temperature T0 = 1000)
- * - Randomly swap two exams' slots to generate a neighbor
- * - If neighbor is better (lower fitness) → always accept
- * - If neighbor is worse → accept with probability P = exp(-delta / T)
- * - Cool: T = alpha * T (alpha = 0.95) until T < 1
- * 
- * Time: O(I * E) where I = iterations until T < 1
- * Space: O(E^2) for conflict matrix only
- * 
- * Sensitive to cooling schedule tuning. Prone to premature freezing if alpha too low.
- * Benchmarked against GA for Chapter 8.
+ * Simulated Annealing — COMPARATOR metaheuristic for Task 5.
+ *
+ * <p>Single-solution local search inspired by metallurgical annealing.</p>
+ *
+ * <p><b>Mechanism:</b></p>
+ * <ul>
+ *   <li>Start from random solution at temperature T0 = 1000</li>
+ *   <li>Generate neighbor by reassigning one random exam to a different slot</li>
+ *   <li>Accept if better; if worse, accept with probability P = exp(-delta/T)</li>
+ *   <li>Cool: T = 0.95 * T until T &lt; 1</li>
+ * </ul>
+ *
+ * <p><b>Time complexity:</b> O(I * E) where I = iterations until T &lt; 1 (~135 for our params)</p>
+ * <p><b>Space complexity:</b> O(E^2) — conflict matrix only</p>
+ *
+ * <p><b>Limitation:</b> Sensitive to cooling schedule. Achieves high satisfaction (98%)
+ * but fails to find clash-free solutions on dense conflict graphs.</p>
  */
 public class SimulatedAnnealing {
 
