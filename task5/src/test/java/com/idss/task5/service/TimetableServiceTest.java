@@ -6,6 +6,7 @@ import com.idss.common.model.Timeslot;
 import com.idss.task5.dto.MasterScheduleEntry;
 import com.idss.task5.dto.RankedRoom;
 import com.idss.task5.dto.RoomReference;
+import com.idss.task5.dto.TimetableRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,6 +15,18 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TimetableServiceTest {
+
+    @Test
+    void rejectsIncompleteRequestPayload() {
+        TimetableRequest request = new TimetableRequest();
+        request.exams = List.of(exam("EX_1", "COURSE_1"));
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> new TimetableService(null).generateFromRequest(request, "GA"));
+
+        assertTrue(error.getMessage().contains("students"));
+    }
 
     @Test
     void assignsDifferentEligibleRoomsWithinOneSlot() {

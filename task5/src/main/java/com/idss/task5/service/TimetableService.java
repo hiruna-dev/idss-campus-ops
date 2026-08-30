@@ -58,6 +58,22 @@ public class TimetableService {
     }
 
     /**
+     * Generate a timetable from an API request payload.
+     */
+    public Map<String, Object> generateFromRequest(TimetableRequest request, String algorithmChoice) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+        return generateTimetable(
+                request.exams,
+                request.students,
+                request.timeslots,
+                request.room_rankings,
+                request.room_references,
+                algorithmChoice);
+    }
+
+    /**
      * Core timetable generation pipeline.
      */
     public Map<String, Object> generateTimetable(
@@ -67,6 +83,7 @@ public class TimetableService {
             List<RankedRoom> roomRankings,
             List<RoomReference> roomReferences,
             String algorithmChoice) {
+        validateInputs(exams, students, timeslots, roomRankings, roomReferences, algorithmChoice);
 
         // Step 1: Extract course codes and build maps
         List<String> courseCodes = exams.stream()
@@ -255,6 +272,77 @@ public class TimetableService {
         }
 
         return response;
+    }
+
+    private void validateInputs(
+            List<Exam> exams,
+            List<Student> students,
+            List<Timeslot> timeslots,
+            List<RankedRoom> roomRankings,
+            List<RoomReference> roomReferences,
+            String algorithmChoice) {
+        requireNonEmpty(exams, "exams");
+        requireNonEmpty(students, "students");
+        requireNonEmpty(timeslots, "timeslots");
+        requireNonEmpty(roomRankings, "room_rankings");
+        requireNonEmpty(roomReferences, "room_references");
+
+        Set<String> examIds = new HashSet<>();
+        Set<String> courseCodes = new HashSet<>();
+        for (Exam exam : exams) {
+            if (exam == null || isBlank(exam.exam_id) || isBlank(exam.course_code)) {
+                throw new IllegalArgumentException("Every exam needs exam_id and course_code");
+            }
+            if (!examIds.add(exam.exam_id) || !courseCodes.add(exam.course_code)) {
+                throw new IllegalArgumentException("Exam IDs and course codes must be unique");
+            }
+        }
+
+        Set<String> roomIds = new HashSet<>();
+        for (RoomReference room : roomReferences) {
+            if (room == null || isBlank(room.room_id) || !roomIds.add(room.room_id)) {
+                throw new IllegalArgumentException("Room references must have unique room_id values");
+            }
+        }
+
+        Set<String> rankedExamIds = new HashSet<>();
+        for (RankedRoom room : roomRankings) {
+            if (room == null || isBlank(room.exam_id) || isBlank(room.room_id)
+                    || room.rank < 1 || !examIds.contains(room.exam_id)
+                    || !roomIds.contains(room.room_id)) {
+                throw new IllegalArgumentException("Room rankings contain an invalid exam or room reference");
+            }
+            rankedExamIds.add(room.exam_id);
+        }
+        if (!rankedExamIds.containsAll(examIds)) {
+            throw new IllegalArgumentException("Every exam needs at least one room ranking");
+        }
+
+        for (Timeslot slot : timeslots) {
+            if (slot == null || isBlank(slot.slot_id) || isBlank(slot.date)
+                    || isBlank(slot.session) || isBlank(slot.start_time)
+                    || isBlank(slot.end_time) || slot.max_exams_parallel < 1) {
+                throw new IllegalArgumentException(
+                        "Every timeslot needs slot_id, date, session, times, and positive max_exams_parallel");
+            }
+        }
+
+        String normalizedAlgorithm = algorithmChoice == null
+                ? "GA"
+                : algorithmChoice.trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("GA", "SA", "GREEDY").contains(normalizedAlgorithm)) {
+            throw new IllegalArgumentException("algorithm must be GA, SA, or GREEDY");
+        }
+    }
+
+    private static void requireNonEmpty(List<?> values, String fieldName) {
+        if (values == null || values.isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " must not be empty");
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /**

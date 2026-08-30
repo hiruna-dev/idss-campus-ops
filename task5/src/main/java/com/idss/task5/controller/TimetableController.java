@@ -1,6 +1,7 @@
 package com.idss.task5.controller;
 
 import com.idss.task5.dto.MasterScheduleEntry;
+import com.idss.task5.dto.TimetableRequest;
 import com.idss.task5.service.TimetableService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,14 +32,18 @@ public class TimetableController {
 
     /**
      * POST /api/task5/generate
-     * Generates timetable from local JSON files.
+     * Generates timetable from the request payload, or local JSON files when the
+     * body is omitted or empty.
      * Optional query param: ?algorithm=GA|SA|GREEDY (default: GA)
      */
     @PostMapping("/generate")
     public ResponseEntity<?> generateTimetable(
-            @RequestParam(value = "algorithm", defaultValue = "GA") String algorithm) {
+            @RequestParam(value = "algorithm", defaultValue = "GA") String algorithm,
+            @RequestBody(required = false) TimetableRequest request) {
         try {
-            Map<String, Object> result = timetableService.generateFromLocalFiles(algorithm);
+            Map<String, Object> result = request == null || !request.hasData()
+                    ? timetableService.generateFromLocalFiles(algorithm)
+                    : timetableService.generateFromRequest(request, algorithm);
 
             String status = (String) result.get("status");
             if ("INFEASIBLE".equals(status)) {
@@ -46,6 +51,10 @@ public class TimetableController {
             }
 
             return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", e.getMessage(), "status", "ERROR")
+            );
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
                 Map.of("error", e.getMessage(), "status", "ERROR")
