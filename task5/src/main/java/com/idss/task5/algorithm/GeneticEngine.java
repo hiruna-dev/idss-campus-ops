@@ -12,13 +12,13 @@ import java.util.*;
  *
  * <p><b>Parameters:</b> Population=100, Generations=500, Tournament k=5, Mutation p=0.05</p>
  *
- * <p><b>Time complexity:</b> O(G * P * E) where G=generations, P=population, E=exams</p>
+ * <p><b>Time complexity:</b> O(G * P * E²) where G=generations, P=population, E=exams.
+ * Fitness evaluation checks every exam pair.</p>
  * <p><b>Space complexity:</b> O(P * E + E^2)</p>
  *
  * <p>After GA completes, Hill Climbing polishes the top 5 chromosomes for local improvement.</p>
  *
- * <p>Best suited for NP-Hard O(S^E) timetabling where exhaustive search is impossible.
- * Achieves 99.5% satisfaction on 100 exams in ~61 seconds.</p>
+ * <p>Best suited for NP-Hard O(S^E) timetabling where exhaustive search is impossible.</p>
  */
 public class GeneticEngine {
 
@@ -33,12 +33,18 @@ public class GeneticEngine {
     private int tournamentSize = 5;
     private int hillClimbingTopN = 5;
 
-    private final Random random = new Random(42); // fixed seed for reproducibility
+    private final Random random;
 
     public GeneticEngine(ConflictMatrix conflictMatrix, ConstraintValidator validator, int numSlots) {
+        this(conflictMatrix, validator, numSlots, 42L);
+    }
+
+    public GeneticEngine(ConflictMatrix conflictMatrix, ConstraintValidator validator,
+                         int numSlots, long randomSeed) {
         this.conflictMatrix = conflictMatrix;
         this.validator = validator;
         this.numSlots = numSlots;
+        this.random = new Random(randomSeed);
     }
 
     /**

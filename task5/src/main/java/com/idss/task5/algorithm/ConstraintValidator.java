@@ -171,10 +171,12 @@ public class ConstraintValidator {
                          + SAME_DAY_WEIGHT * fatigue[1]
                          + CONSECUTIVE_DAY_WEIGHT * fatigue[2];
 
-        // Max possible: all clash pairs in back-to-back = worst case
-        int maxPenalty = conflictMatrix.getTotalConflictEdges() * BACK_TO_BACK_WEIGHT;
+        // A same-day back-to-back pair receives both soft penalties.
+        int maxPenalty = conflictMatrix.getTotalConflictEdges()
+                * (BACK_TO_BACK_WEIGHT + SAME_DAY_WEIGHT);
         if (maxPenalty == 0) return 100.0;
 
-        return Math.round((1.0 - (double) totalPenalty / maxPenalty) * 1000.0) / 10.0;
+        double satisfaction = 1.0 - (double) totalPenalty / maxPenalty;
+        return Math.round(Math.max(0.0, satisfaction) * 1000.0) / 10.0;
     }
 }

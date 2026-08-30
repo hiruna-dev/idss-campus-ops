@@ -8,12 +8,13 @@ import java.util.*;
  * <p>Deterministic constructive heuristic that sorts exams by descending conflict degree
  * (most constrained first) and assigns each to the first available clash-free slot.</p>
  *
- * <p><b>Time complexity:</b> O(E log E + E * S) — PriorityQueue sort + slot scanning</p>
+ * <p><b>Time complexity:</b> O(E log E + E² * S) — each candidate slot scans
+ * already-assigned exams</p>
  * <p><b>Space complexity:</b> O(E^2) — conflict matrix</p>
  *
  * <p>Extremely fast (&lt;1ms even for 100 exams) and guarantees clash-free schedules
  * when sufficient slots exist. However, completely blind to soft fatigue constraints,
- * producing 40x more fatigue than GA at E=100.</p>
+ * producing more fatigue than GA on the benchmark's synthetic data.</p>
  *
  * <p>Serves as the baseline to prove GA's superiority in Chapter 8.</p>
  */

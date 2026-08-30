@@ -153,4 +153,24 @@ class AlgorithmTest {
         int violations = validator.countHardViolations(perfectSchedule);
         assertEquals(0, violations, "All-different-slots should have 0 hard violations");
     }
+
+    @Test
+    void satisfaction_shouldRemainWithinZeroToOneHundredPercent() {
+        Exam first = new Exam();
+        first.course_code = "PDSA201";
+        Exam second = new Exam();
+        second.course_code = "NET102";
+
+        Student student = new Student();
+        student.enrolled_courses = List.of("PDSA201", "NET102");
+
+        ConflictMatrix pairMatrix = new ConflictMatrix(
+                List.of(student), List.of("PDSA201", "NET102"));
+        ConstraintValidator pairValidator = new ConstraintValidator(
+                pairMatrix, timeslots, List.of(first, second));
+
+        // Same-day back-to-back includes both soft penalties, so it is the
+        // worst possible pair and must report exactly 0%, not a negative value.
+        assertEquals(0.0, pairValidator.calculateSatisfactionPercentage(new int[]{0, 1}));
+    }
 }

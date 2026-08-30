@@ -5,6 +5,7 @@ import com.idss.task5.service.TimetableService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -72,17 +73,20 @@ public class TimetableController {
     }
 
         /**
-     * POST /api/task5/benchmark
+     * GET or POST /api/task5/benchmark
      * Runs the full benchmark suite (E=10,30,50,100) for all 3 algorithms.
      * Returns JSON table for Chapter 8 charts.
      */
-    @PostMapping("/benchmark")
+    @RequestMapping(value = "/benchmark", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<?> runBenchmark() {
         try {
             List<Map<String, Object>> results = com.idss.task5.benchmark.BenchmarkRunner.runFullBenchmark();
 
-            // Export to file
-            com.idss.task5.benchmark.BenchmarkRunner.exportResults(results, "../data/shared/benchmark_results.json");
+            File dataRoot = new File("data/input").isDirectory()
+                    ? new File("data/shared")
+                    : new File("../data/shared");
+            com.idss.task5.benchmark.BenchmarkRunner.exportResults(
+                    results, new File(dataRoot, "benchmark_results.json").getPath());
 
             return ResponseEntity.ok(Map.of(
                 "status", "COMPLETED",

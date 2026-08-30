@@ -15,11 +15,12 @@ import java.util.*;
  *   <li>Cool: T = 0.95 * T until T &lt; 1</li>
  * </ul>
  *
- * <p><b>Time complexity:</b> O(I * E) where I = iterations until T &lt; 1 (~135 for our params)</p>
+ * <p><b>Time complexity:</b> O(I * E²) where I = iterations until T &lt; 1 (~135 for our params).
+ * Fitness evaluation checks every exam pair.</p>
  * <p><b>Space complexity:</b> O(E^2) — conflict matrix only</p>
  *
- * <p><b>Limitation:</b> Sensitive to cooling schedule. Achieves high satisfaction (98%)
- * but fails to find clash-free solutions on dense conflict graphs.</p>
+ * <p><b>Limitation:</b> Sensitive to cooling schedule and may fail to find
+ * clash-free solutions on dense conflict graphs.</p>
  */
 public class SimulatedAnnealing {
 
@@ -32,12 +33,18 @@ public class SimulatedAnnealing {
     private double coolingRate = 0.95;
     private double minTemperature = 1.0;
 
-    private final Random random = new Random(42);
+    private final Random random;
 
     public SimulatedAnnealing(ConflictMatrix conflictMatrix, ConstraintValidator validator, int numSlots) {
+        this(conflictMatrix, validator, numSlots, 42L);
+    }
+
+    public SimulatedAnnealing(ConflictMatrix conflictMatrix, ConstraintValidator validator,
+                              int numSlots, long randomSeed) {
         this.conflictMatrix = conflictMatrix;
         this.validator = validator;
         this.numSlots = numSlots;
+        this.random = new Random(randomSeed);
     }
 
     /**

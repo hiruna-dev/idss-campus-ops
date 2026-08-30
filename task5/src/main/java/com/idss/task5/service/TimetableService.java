@@ -127,6 +127,9 @@ public class TimetableService {
         // Step 5: Build output_master_schedule.json
         int[] chromosome = result.bestChromosome;
         List<MasterScheduleEntry> schedule = new ArrayList<>();
+        Map<Integer, Set<String>> usedRoomsBySlot = new HashMap<>();
+        Map<Integer, Integer> examsPerSlot = new HashMap<>();
+        int resourceViolations = 0;
 
         for (int i = 0; i < courseCodes.size(); i++) {
             String courseCode = courseCodes.get(i);
@@ -139,16 +142,31 @@ public class TimetableService {
             int floor = 0;
             String canonicalRoomId = "ROOM_UNASSIGNED";
 
-            // Try to get room from exam_id mapping
+            // Select the highest-ranked eligible room not already used in this slot.
             List<RankedRoom> ranked = roomRankingMap.get(exam.exam_id);
             if (ranked != null && !ranked.isEmpty()) {
-                RankedRoom best = ranked.get(0); // rank 1
-                roomId = best.room_id;
-                canonicalRoomId = CanonicalMapper.toCanonical(roomId);
-                RoomReference ref = roomRefMap.get(roomId);
-                if (ref != null) {
+                Set<String> usedRooms = usedRoomsBySlot.computeIfAbsent(slotIndex, k -> new HashSet<>());
+                for (RankedRoom candidate : ranked) {
+                    RoomReference ref = roomRefMap.get(candidate.room_id);
+                    if (!candidate.meets_hard_constraints || ref == null
+                            || (exam.requires_accessibility && !ref.is_accessible)
+                            || usedRooms.contains(candidate.room_id)) {
+                        continue;
+                    }
+                    roomId = candidate.room_id;
+                    canonicalRoomId = CanonicalMapper.toCanonical(roomId);
                     floor = ref.floor;
+                    usedRooms.add(roomId);
+                    break;
                 }
+            }
+            if ("UNASSIGNED".equals(roomId)) {
+                resourceViolations++;
+            }
+
+            int parallelCount = examsPerSlot.merge(slotIndex, 1, Integer::sum);
+            if (slot.max_exams_parallel > 0 && parallelCount > slot.max_exams_parallel) {
+                resourceViolations++;
             }
 
             MasterScheduleEntry entry = new MasterScheduleEntry();
@@ -170,12 +188,16 @@ public class TimetableService {
             schedule.add(entry);
         }
 
+        // Room availability and slot capacity are hard constraints in the final output.
+        result.hardViolations += resourceViolations;
+
         // Step 6: Build metrics response
         Map<String, Object> metrics = new LinkedHashMap<>();
         metrics.put("algorithm_used", result.algorithmName);
         metrics.put("execution_time_ms", Math.round(result.executionTimeMs * 100.0) / 100.0);
         metrics.put("memory_allocated_kb", Math.round(result.memoryKb * 100.0) / 100.0);
         metrics.put("hard_constraint_violations", result.hardViolations);
+        metrics.put("resource_constraint_violations", resourceViolations);
         metrics.put("clash_free", result.isClashFree());
         metrics.put("total_fatigue_penalty", result.totalFatiguePenalty);
 

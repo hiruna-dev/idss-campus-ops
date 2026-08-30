@@ -13,7 +13,7 @@ import java.util.*;
  * Automated benchmark runner for Chapter 8 of Individual Report.
  *
  * Generates synthetic datasets of increasing size (10, 30, 50, 100 exams),
- * runs all 3 algorithms 30 times each, and outputs results as JSON.
+ * runs all 3 algorithms 30 times each with independent seeds, and outputs results as JSON.
  *
  * Metrics collected:
  * - execution_time_ms (average over 30 runs)
@@ -25,7 +25,7 @@ import java.util.*;
  */
 public class BenchmarkRunner {
 
-        private static final int RUNS_PER_SIZE = 5;
+    private static final int RUNS_PER_SIZE = 30;
     private static final int[] EXAM_SIZES = {10, 30, 50, 100};
 
     /**
@@ -62,7 +62,7 @@ public class BenchmarkRunner {
     }
 
     /**
-     * Benchmark one algorithm across 30 runs for a given exam size.
+     * Benchmark one algorithm across 30 independently seeded runs for a given exam size.
      */
     private static Map<String, Object> benchmarkAlgorithm(
             String algoName, int numExams, ConflictMatrix matrix,
@@ -82,10 +82,10 @@ public class BenchmarkRunner {
                     result = new GreedyScheduler(matrix, validator, numSlots).run();
                     break;
                 case "SA":
-                    result = new SimulatedAnnealing(matrix, validator, numSlots).run();
+                    result = new SimulatedAnnealing(matrix, validator, numSlots, 42L + run).run();
                     break;
                 default:
-                    result = new GeneticEngine(matrix, validator, numSlots).run();
+                    result = new GeneticEngine(matrix, validator, numSlots, 42L + run).run();
                     break;
             }
 
