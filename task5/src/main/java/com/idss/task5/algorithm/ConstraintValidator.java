@@ -29,6 +29,10 @@ public class ConstraintValidator {
     private final ConflictMatrix conflictMatrix;
     private final List<Timeslot> timeslots;
     private final Map<String, Exam> examMap;
+    private final int hardWeight;
+    private final int backToBackWeight;
+    private final int sameDayWeight;
+    private final int consecutiveDayWeight;
 
     // Pre-computed: which slot indices are on the same date
     private final Map<String, List<Integer>> dateToSlotIndices;
@@ -36,8 +40,24 @@ public class ConstraintValidator {
     private final List<String> orderedDates;
 
     public ConstraintValidator(ConflictMatrix conflictMatrix, List<Timeslot> timeslots, List<Exam> exams) {
+        this(conflictMatrix, timeslots, exams,
+                HARD_WEIGHT, BACK_TO_BACK_WEIGHT, SAME_DAY_WEIGHT, CONSECUTIVE_DAY_WEIGHT);
+    }
+
+    public ConstraintValidator(
+            ConflictMatrix conflictMatrix,
+            List<Timeslot> timeslots,
+            List<Exam> exams,
+            int hardWeight,
+            int backToBackWeight,
+            int sameDayWeight,
+            int consecutiveDayWeight) {
         this.conflictMatrix = conflictMatrix;
         this.timeslots = timeslots;
+        this.hardWeight = hardWeight;
+        this.backToBackWeight = backToBackWeight;
+        this.sameDayWeight = sameDayWeight;
+        this.consecutiveDayWeight = consecutiveDayWeight;
         this.examMap = new HashMap<>();
         for (Exam exam : exams) {
             examMap.put(exam.course_code, exam);
@@ -85,10 +105,10 @@ public class ConstraintValidator {
         int hardViolations = countHardViolations(chromosome);
         int[] fatigue = calculateFatigueBreakdown(chromosome);
 
-        return HARD_WEIGHT * hardViolations
-             + BACK_TO_BACK_WEIGHT * fatigue[0]
-             + SAME_DAY_WEIGHT * fatigue[1]
-             + CONSECUTIVE_DAY_WEIGHT * fatigue[2];
+        return hardWeight * hardViolations
+             + backToBackWeight * fatigue[0]
+             + sameDayWeight * fatigue[1]
+             + consecutiveDayWeight * fatigue[2];
     }
 
     /**
@@ -156,9 +176,9 @@ public class ConstraintValidator {
      */
     public int getTotalFatiguePenalty(int[] chromosome) {
         int[] fatigue = calculateFatigueBreakdown(chromosome);
-        return BACK_TO_BACK_WEIGHT * fatigue[0]
-             + SAME_DAY_WEIGHT * fatigue[1]
-             + CONSECUTIVE_DAY_WEIGHT * fatigue[2];
+        return backToBackWeight * fatigue[0]
+             + sameDayWeight * fatigue[1]
+             + consecutiveDayWeight * fatigue[2];
     }
 
     /**
@@ -167,13 +187,13 @@ public class ConstraintValidator {
      */
     public double calculateSatisfactionPercentage(int[] chromosome) {
         int[] fatigue = calculateFatigueBreakdown(chromosome);
-        int totalPenalty = BACK_TO_BACK_WEIGHT * fatigue[0]
-                         + SAME_DAY_WEIGHT * fatigue[1]
-                         + CONSECUTIVE_DAY_WEIGHT * fatigue[2];
+        int totalPenalty = backToBackWeight * fatigue[0]
+                         + sameDayWeight * fatigue[1]
+                         + consecutiveDayWeight * fatigue[2];
 
         // A same-day back-to-back pair receives both soft penalties.
         int maxPenalty = conflictMatrix.getTotalConflictEdges()
-                * (BACK_TO_BACK_WEIGHT + SAME_DAY_WEIGHT);
+                * (backToBackWeight + sameDayWeight);
         if (maxPenalty == 0) return 100.0;
 
         double satisfaction = 1.0 - (double) totalPenalty / maxPenalty;

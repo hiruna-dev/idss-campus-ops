@@ -35,6 +35,33 @@ public class TimetableService {
     @Value("${task5.data.output-dir:../data/shared}")
     private String outputDir;
 
+    @Value("${task5.algorithm.default:GA}")
+    private String defaultAlgorithm = "GA";
+    @Value("${task5.algorithm.ga.population-size:100}")
+    private int gaPopulationSize = 100;
+    @Value("${task5.algorithm.ga.generations:500}")
+    private int gaGenerations = 500;
+    @Value("${task5.algorithm.ga.mutation-rate:0.05}")
+    private double gaMutationRate = 0.05;
+    @Value("${task5.algorithm.ga.tournament-size:5}")
+    private int gaTournamentSize = 5;
+    @Value("${task5.algorithm.ga.hill-climbing-top-n:5}")
+    private int gaHillClimbingTopN = 5;
+    @Value("${task5.algorithm.sa.initial-temperature:1000}")
+    private double saInitialTemperature = 1000;
+    @Value("${task5.algorithm.sa.cooling-rate:0.95}")
+    private double saCoolingRate = 0.95;
+    @Value("${task5.algorithm.sa.min-temperature:1}")
+    private double saMinTemperature = 1;
+    @Value("${task5.fatigue.hard-weight:1000}")
+    private int hardWeight = ConstraintValidator.HARD_WEIGHT;
+    @Value("${task5.fatigue.back-to-back-weight:10}")
+    private int backToBackWeight = ConstraintValidator.BACK_TO_BACK_WEIGHT;
+    @Value("${task5.fatigue.same-day-weight:5}")
+    private int sameDayWeight = ConstraintValidator.SAME_DAY_WEIGHT;
+    @Value("${task5.fatigue.consecutive-day-weight:1}")
+    private int consecutiveDayWeight = ConstraintValidator.CONSECUTIVE_DAY_WEIGHT;
+
     public TimetableService(ScheduleRepository scheduleRepository) {
         this.scheduleRepository = scheduleRepository;
         this.objectMapper = new ObjectMapper();
@@ -117,13 +144,17 @@ public class TimetableService {
         ConflictMatrix conflictMatrix = new ConflictMatrix(students, courseCodes);
 
         // Step 3: Create constraint validator
-        ConstraintValidator validator = new ConstraintValidator(conflictMatrix, timeslots, exams);
+        ConstraintValidator validator = new ConstraintValidator(
+                conflictMatrix, timeslots, exams,
+                hardWeight, backToBackWeight, sameDayWeight, consecutiveDayWeight);
 
         int numSlots = timeslots.size();
 
         // Step 4: Run selected algorithm
         AlgorithmResult result;
-        String algoName = algorithmChoice != null ? algorithmChoice.toUpperCase() : "GA";
+        String algoName = algorithmChoice != null && !algorithmChoice.isBlank()
+                ? algorithmChoice.trim().toUpperCase(Locale.ROOT)
+                : (defaultAlgorithm == null ? "GA" : defaultAlgorithm.trim().toUpperCase(Locale.ROOT));
 
         switch (algoName) {
             case "GREEDY":
@@ -132,13 +163,18 @@ public class TimetableService {
                 break;
             case "SA":
                 SimulatedAnnealing sa = new SimulatedAnnealing(conflictMatrix, validator, numSlots);
+                sa.setParameters(saInitialTemperature, saCoolingRate, saMinTemperature);
                 result = sa.run();
                 break;
             case "GA":
-            default:
                 GeneticEngine ga = new GeneticEngine(conflictMatrix, validator, numSlots);
+                ga.setParameters(
+                        gaPopulationSize, gaGenerations, gaMutationRate,
+                        gaTournamentSize, gaHillClimbingTopN);
                 result = ga.run();
                 break;
+            default:
+                throw new IllegalArgumentException("algorithm must be GA, SA, or GREEDY");
         }
 
         // Step 5: Build output_master_schedule.json
