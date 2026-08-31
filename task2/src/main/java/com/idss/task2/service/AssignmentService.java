@@ -2,8 +2,11 @@ package com.idss.task2.service;
 
 import com.idss.common.config.Canonical;
 import com.idss.common.model.Invigilator;
+import com.idss.task2.algorithm.Assignment;
+import com.idss.task2.algorithm.ConstraintValidator;
 import com.idss.task2.algorithm.CostMatrixBuilder;
 import com.idss.task2.algorithm.CostMatrixBuilder.CostMatrix;
+import com.idss.task2.algorithm.FairnessCalculator;
 import com.idss.task2.algorithm.Hungarian;
 import com.idss.task2.model.AssignedInvigilator;
 import com.idss.task2.model.MasterScheduleEntry;
@@ -25,6 +28,8 @@ public class AssignmentService {
 
     private final CostMatrixBuilder costMatrixBuilder = new CostMatrixBuilder();
     private final Hungarian hungarian = new Hungarian();
+    private final ConstraintValidator constraintValidator = new ConstraintValidator();
+    private final FairnessCalculator fairnessCalculator = new FairnessCalculator();
     private final ProctorRosterRepository rosterRepository;
 
     private volatile RosterMetrics lastMetrics;
@@ -57,8 +62,11 @@ public class AssignmentService {
         List<Assignment> rawAssignments = decodeAssignment(assignment, costMatrix,
                 invigilatorById, examById);
 
-        int violations = countHardViolations(rawAssignments, invigilatorById);
-        double fairnessVariance = fairnessVariance(rawAssignments, invigilators);
+        ConstraintValidator.ConstraintResult constraintResult =
+                constraintValidator.validate(rawAssignments);
+        int violations = constraintResult.violations;
+        double fairnessVariance = fairnessCalculator
+                .calculate(rawAssignments, invigilators).fairnessVariance;
 
         String status = violations > 0
                 ? Canonical.STATUS_INFEASIBLE
@@ -145,68 +153,6 @@ public class AssignmentService {
         return result;
     }
 
-    private int countHardViolations(List<Assignment> assignments,
-                                    Map<String, Invigilator> invigilatorById) {
-        Map<String, Integer> shiftsPerDay = new HashMap<>();
-        Map<String, Integer> totalShifts = new HashMap<>();
-
-        int violations = 0;
-        for (Assignment a : assignments) {
-            Invigilator inv = a.inv;
-            MasterScheduleEntry exam = a.exam;
-
-            if (inv.restricted_courses != null
-                    && inv.restricted_courses.contains(exam.course_code)) {
-                violations++;
-            }
-
-            if (inv.unavailability != null) {
-                for (Invigilator.Unavailability u : inv.unavailability) {
-                    if (u.date.equals(exam.date) && u.session.equals(exam.session)) {
-                        violations++;
-                        break;
-                    }
-                }
-            }
-
-            String dayKey = inv.invigilator_id + "|" + exam.date;
-            int today = shiftsPerDay.getOrDefault(dayKey, 0) + 1;
-            shiftsPerDay.put(dayKey, today);
-            if (today > inv.max_shifts_per_day) {
-                violations++;
-            }
-
-            int total = totalShifts.getOrDefault(inv.invigilator_id, 0) + 1;
-            totalShifts.put(inv.invigilator_id, total);
-            if (total > inv.max_total_shifts) {
-                violations++;
-            }
-        }
-        return violations;
-    }
-
-    private double fairnessVariance(List<Assignment> assignments,
-                                    List<Invigilator> invigilators) {
-        Map<String, Integer> shiftsPerInvigilator = new HashMap<>();
-        for (Invigilator inv : invigilators) { //populating map
-            shiftsPerInvigilator.put(inv.invigilator_id, 0);
-        }
-        for (Assignment a : assignments) { //actually assigning proper values
-            shiftsPerInvigilator.merge(a.inv.invigilator_id, 1, Integer::sum);
-        }
-
-        int n = invigilators.size();
-        if (n == 0) return 0.0;
-
-        double mean = (double) assignments.size() / n;
-        double sumSq = 0.0;
-        for (int shifts : shiftsPerInvigilator.values()) {
-            double diff = shifts - mean;
-            sumSq += diff * diff;
-        }
-        return sumSq / n;
-    }
-
     private ProctorRoster buildRoster(List<Assignment> assignments,
                                       Map<String, MasterScheduleEntry> examById,
                                       String status) {
@@ -266,15 +212,5 @@ public class AssignmentService {
         metrics.fairness_variance = fairnessVariance;
         metrics.total_shifts_allocated = totalShifts;
         return metrics;
-    }
-
-    private static final class Assignment {
-        final Invigilator inv;
-        final MasterScheduleEntry exam;
-
-        Assignment(Invigilator inv, MasterScheduleEntry exam) {
-            this.inv = inv;
-            this.exam = exam;
-        }
     }
 }
