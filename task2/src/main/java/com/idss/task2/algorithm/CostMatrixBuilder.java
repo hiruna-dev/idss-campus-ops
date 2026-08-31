@@ -10,6 +10,8 @@ import java.util.Map;
 
 public class CostMatrixBuilder {
 
+
+    //cost constants
     public static final int HARD_VIOLATION = 10000;
     public static final int SHIFT_LIMIT_VIOLATION = 5000;
     public static final int FLOOR_MISMATCH = 50;
@@ -38,6 +40,7 @@ public class CostMatrixBuilder {
     public CostMatrix build(List<MasterScheduleEntry> exams, List<Invigilator> invigilators,
                             Map<String, Integer> priorTotalShifts,
                             Map<String, Integer> priorShiftsByDay) {
+        //extracting invigilators and exams
         Map<String, Invigilator> invigilatorById = new HashMap<>();
         for (Invigilator inv : invigilators) {
             invigilatorById.put(inv.invigilator_id, inv);
@@ -47,6 +50,7 @@ public class CostMatrixBuilder {
             examById.put(e.exam_id, e);
         }
 
+        //extracting to columns and rows
         List<String> columnExamIds = new ArrayList<>();
         for (MasterScheduleEntry exam : exams) {
             int slots = Math.max(1, exam.required_invigilators);
@@ -60,16 +64,20 @@ public class CostMatrixBuilder {
             rowInvigilatorIds.add(inv.invigilator_id);
         }
 
+        //caclulating size
         int realRows = rowInvigilatorIds.size();
         int realCols = columnExamIds.size();
         int size = Math.max(realRows, realCols);
         if (size == 0) size = 1;
 
+        //filling this with null because we need square for hungarian algo
         while (rowInvigilatorIds.size() < size) rowInvigilatorIds.add(null);
         while (columnExamIds.size() < size) columnExamIds.add(null);
 
+        //creating cost matrix
         int[][] cost = new int[size][size];
 
+        //inserting data into the matrix
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 String invId = rowInvigilatorIds.get(i);
@@ -82,7 +90,7 @@ public class CostMatrixBuilder {
                     cost[i][j] = cellCost(
                             invigilatorById.get(invId),
                             examById.get(examId),
-                            priorTotalShifts,
+                            priorTotalShifts, //passed at build method params. takes 0 if none provided
                             priorShiftsByDay);
                 }
             }
@@ -96,10 +104,12 @@ public class CostMatrixBuilder {
                          Map<String, Integer> priorShiftsByDay) {
         int cost = 0;
 
+        //checking for restricted courses
         if (inv.restricted_courses != null && inv.restricted_courses.contains(exam.course_code)) {
             cost += HARD_VIOLATION;
         }
 
+        //checking for invigi unavailablitiy
         if (inv.unavailability != null) {
             for (Invigilator.Unavailability u : inv.unavailability) {
                 if (u.date.equals(exam.date) && u.session.equals(exam.session)) {
@@ -109,6 +119,7 @@ public class CostMatrixBuilder {
             }
         }
 
+        //checking for invigi shift limits
         String dayKey = inv.invigilator_id + "|" + exam.date;
         int shiftsToday = priorShiftsByDay.getOrDefault(dayKey, 0);
         int totalShifts = priorTotalShifts.getOrDefault(inv.invigilator_id, 0);
@@ -124,6 +135,7 @@ public class CostMatrixBuilder {
             cost += FLOOR_MISMATCH;
         }
 
+        //soft violations
         cost += SAME_DAY_STACK * shiftsToday;
         cost += FAIRNESS_LOAD * totalShifts;
 
