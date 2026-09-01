@@ -1,0 +1,82 @@
+[
+  {
+    "exam_id": "EX_101",
+    "course_code": "PDSA201",
+    "course_title": "Data Structures & Algorithms",
+    "student_count": 48,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-10T09:00:00"
+  },
+  {
+    "exam_id": "EX_102",
+    "course_code": "NET102",
+    "course_title": "Computer Networks",
+    "student_count": 35,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-10T09:00:00"
+  },
+  {
+    "exam_id": "EX_103",
+    "course_code": "DMS201",
+    "course_title": "Discrete Mathematics",
+    "student_count": 48,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-10T14:00:00"
+  },
+  {
+    "exam_id": "EX_104",
+    "course_code": "OOP101",
+    "course_title": "Object Oriented Programming",
+    "student_count": 35,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-11T09:00:00"
+  },
+  {
+    "exam_id": "EX_105",
+    "course_code": "DBS301",
+    "course_title": "Database Systems",
+    "student_count": 40,
+    "requires_accessibility": true,
+    "preferred_time_slot": "2026-09-11T09:00:00"
+  },
+  {
+    "exam_id": "EX_106",
+    "course_code": "SWE202",
+    "course_title": "Software Engineering",
+    "student_count": 48,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-11T14:00:00"
+  },
+  {
+    "exam_id": "EX_107",
+    "course_code": "OS302",
+    "course_title": "Operating Systems",
+    "student_count": 40,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-12T09:00:00"
+  },
+  {
+    "exam_id": "EX_108",
+    "course_code": "AI303",
+    "course_title": "Artificial Intelligence",
+    "student_count": 41,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-12T09:00:00"
+  },
+  {
+    "exam_id": "EX_109",
+    "course_code": "WEB101",
+    "course_title": "Web Development",
+    "student_count": 35,
+    "requires_accessibility": false,
+    "preferred_time_slot": "2026-09-12T14:00:00"
+  },
+  {
+    "exam_id": "EX_110",
+    "course_code": "ISM401",
+    "course_title": "Information Security Management",
+    "student_count": 25,
+    "requires_accessibility": true,
+    "preferred_time_slot": "2026-09-13T09:00:00"
+  }
+]
