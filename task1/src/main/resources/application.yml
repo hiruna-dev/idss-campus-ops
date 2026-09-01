@@ -14,5 +14,6 @@ idss:
   task1:
     building-graph-path: data/input/input_building_graph.json
     dispatch-orders-path: data/input/input_dispatch_orders.json
+    master-schedule-path: data/shared/output_master_schedule.json
     output-routes-path: data/shared/output_delivery_routes.json
     output-metrics-path: data/shared/output_routing_metrics.json

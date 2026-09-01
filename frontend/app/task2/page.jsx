@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MetricsBar from "@/components/MetricsBar";
+import { api } from "@/lib/api";
 
 export default function Task2Page() {
   const [result, setResult] = useState(null);
@@ -13,14 +14,17 @@ export default function Task2Page() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/task2/assign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setResult(json.data ?? json);
+      let schedule;
+      try {
+        schedule = await api.task5.getSchedule();
+        if (!Array.isArray(schedule) || schedule.length === 0) {
+          schedule = undefined;
+        }
+      } catch {
+        schedule = undefined;
+      }
+      const json = await api.task2.assign(schedule);
+      setResult(json);
       setMetrics(json.metrics ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
@@ -35,7 +39,7 @@ export default function Task2Page() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "output_proctor_rosters.json";
+    a.download = "output_proctor_roster.json";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -49,7 +53,7 @@ export default function Task2Page() {
         <div className="rounded-lg bg-card p-4 shadow">
           <h3 className="font-semibold">Input</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Master schedule + invigilators
+            Master schedule from Task 5 + invigilators file
           </p>
           <div className="mt-4 flex gap-2">
             <button

@@ -35,6 +35,9 @@ public class AssignmentController {
     @Value("${task2.output.metrics-path}")
     private String metricsOutputPath;
 
+    @Value("${task2.input.schedule-path}")
+    private String schedulePath;
+
     public AssignmentController(AssignmentService assignmentService) {
         this.assignmentService = assignmentService;
     }
@@ -42,8 +45,12 @@ public class AssignmentController {
     //assigns invigilators to exams in the given master schedule
     //loads invigilators from json, runs the hungarian algo via service, writes output files
     @PostMapping("/assign")
-    public ResponseEntity<?> assign(@RequestBody List<MasterScheduleEntry> schedule) {
+    public ResponseEntity<?> assign(@RequestBody(required = false) List<MasterScheduleEntry> schedule) {
         try {
+            if (schedule == null || schedule.isEmpty()) {
+                schedule = JsonLoader.loadList(schedulePath, MasterScheduleEntry.class);
+            }
+
             //loading invigilators from the input json file
             List<Invigilator> invigilators = JsonLoader.loadList(invigilatorsPath, Invigilator.class);
 

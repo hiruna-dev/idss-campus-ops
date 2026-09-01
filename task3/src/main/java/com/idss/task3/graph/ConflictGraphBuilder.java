@@ -80,6 +80,7 @@ public class ConflictGraphBuilder implements ConflictGraph {
 
     public static class Builder {
         private List<String> examRegistry = new ArrayList<>();
+        private Map<String, String> courseToExamId = new HashMap<>();
         private int[][] conflictMatrix;
         private List<ConflictEdge> edges = new ArrayList<>();
         private List<VertexResult> vertices = new ArrayList<>();
@@ -87,10 +88,12 @@ public class ConflictGraphBuilder implements ConflictGraph {
 
         public Builder withExams(List<Exam> exams) {
             if (exams != null && !exams.isEmpty()) {
-                this.examRegistry = exams.stream()
-                        .map(e -> e.course_code)
-                        .distinct()
-                        .collect(Collectors.toList());
+                for (Exam exam : exams) {
+                    courseToExamId.put(exam.course_code, exam.exam_id);
+                    if (!examRegistry.contains(exam.course_code)) {
+                        examRegistry.add(exam.course_code);
+                    }
+                }
             }
             return this;
         }
@@ -115,8 +118,9 @@ public class ConflictGraphBuilder implements ConflictGraph {
                 examIndexMap.put(this.examRegistry.get(i), i);
                 
                 VertexResult vr = new VertexResult();
-                vr.setExamId(this.examRegistry.get(i));
-                vr.setCourseCode(this.examRegistry.get(i));
+                String courseCode = this.examRegistry.get(i);
+                vr.setExamId(courseToExamId.getOrDefault(courseCode, courseCode));
+                vr.setCourseCode(courseCode);
                 this.vertices.add(vr);
             }
 

@@ -7,7 +7,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017}
-      database: ${MONGO_DATABASE:idss_campus_ops}
+      database: ${MONGO_DATABASE:idss}
 
 # Production path (RankingService) reads room master data from the Mongo
 # 'rooms' collection (master_context_file.md Section 5), seeded by DatabaseSeeder

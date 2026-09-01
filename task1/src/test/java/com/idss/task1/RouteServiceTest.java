@@ -27,6 +27,7 @@ public class RouteServiceTest {
         routeService = new RouteService(
                 "data/input/input_building_graph.json",
                 "data/input/input_dispatch_orders.json",
+                "data/shared/output_master_schedule.json",
                 "data/shared/output_delivery_routes.json"
         );
     }

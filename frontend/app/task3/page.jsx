@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MetricsBar from "@/components/MetricsBar";
+import { api } from "@/lib/api";
 
 export default function Task3Page() {
   const [result, setResult] = useState(null);
@@ -13,15 +14,9 @@ export default function Task3Page() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/task3/detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setResult(json.data ?? json);
-      setMetrics(json.metrics ?? null);
+      const json = await api.task3.detect();
+      setResult(json);
+      setMetrics(json.clash_analysis ?? json.metrics ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
@@ -31,7 +26,8 @@ export default function Task3Page() {
 
   const exportJson = () => {
     if (!result) return;
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    const exportData = result.conflict_graph ?? result;
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -48,7 +44,7 @@ export default function Task3Page() {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-lg bg-card p-4 shadow">
           <h3 className="font-semibold">Input</h3>
-          <p className="mt-2 text-sm text-gray-500">Student enrollments</p>
+          <p className="mt-2 text-sm text-gray-500">Student enrollments + exams</p>
           <div className="mt-4 flex gap-2">
             <button
               onClick={runAlgorithm}

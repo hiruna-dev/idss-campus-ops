@@ -77,9 +77,15 @@ public class TimetableService {
         List<Student> students = loadJson(inputDir + "/input_student_enrollments.json", new TypeReference<List<Student>>() {});
         List<Timeslot> timeslots = loadJson(inputDir + "/input_timeslots.json", new TypeReference<List<Timeslot>>() {});
 
-        // Load Task 4 outputs (room rankings + room reference)
-        List<RankedRoom> roomRankings = loadJson(inputDir + "/input_room_rankings.json", new TypeReference<List<RankedRoom>>() {});
-        List<RoomReference> roomReferences = loadJson(inputDir + "/input_room_reference.json", new TypeReference<List<RoomReference>>() {});
+        // Load Task 4 outputs — prefer shared output files, fall back to input seeds
+        List<RankedRoom> roomRankings = loadJsonWithFallback(
+                outputDir + "/output_room_rankings.json",
+                inputDir + "/input_room_rankings.json",
+                new TypeReference<List<RankedRoom>>() {});
+        List<RoomReference> roomReferences = loadJsonWithFallback(
+                outputDir + "/output_room_reference.json",
+                inputDir + "/input_room_reference.json",
+                new TypeReference<List<RoomReference>>() {});
 
         return generateTimetable(exams, students, timeslots, roomRankings, roomReferences, algorithmChoice);
     }
@@ -469,6 +475,15 @@ public class TimetableService {
     // Helper: load JSON from file
     private <T> T loadJson(String filePath, TypeReference<T> typeRef) throws Exception {
         return objectMapper.readValue(new File(filePath), typeRef);
+    }
+
+    // Helper: load JSON preferring primary path, falling back to secondary
+    private <T> T loadJsonWithFallback(String primaryPath, String fallbackPath, TypeReference<T> typeRef) throws Exception {
+        File primary = new File(primaryPath);
+        if (primary.exists()) {
+            return loadJson(primaryPath, typeRef);
+        }
+        return loadJson(fallbackPath, typeRef);
     }
 
     // Helper: write JSON to file

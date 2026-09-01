@@ -40,6 +40,7 @@ public class RouteService {
     private final ManifestGenerator manifestGenerator;
     private final String buildingGraphPath;
     private final String dispatchOrdersPath;
+    private final String masterSchedulePath;
     private final String outputRoutesPath;
 
     private BuildingGraph buildingGraph;
@@ -47,11 +48,13 @@ public class RouteService {
     public RouteService(
             @Value("${idss.task1.building-graph-path:data/input/input_building_graph.json}") String buildingGraphPath,
             @Value("${idss.task1.dispatch-orders-path:data/input/input_dispatch_orders.json}") String dispatchOrdersPath,
+            @Value("${idss.task1.master-schedule-path:data/shared/output_master_schedule.json}") String masterSchedulePath,
             @Value("${idss.task1.output-routes-path:data/shared/output_delivery_routes.json}") String outputRoutesPath) {
         this.aStarEngine = new AStarEngine();
         this.manifestGenerator = new ManifestGenerator();
         this.buildingGraphPath = buildingGraphPath;
         this.dispatchOrdersPath = dispatchOrdersPath;
+        this.masterSchedulePath = masterSchedulePath;
         this.outputRoutesPath = outputRoutesPath;
         initializeGraph();
     }
@@ -220,6 +223,22 @@ public class RouteService {
     }
 
     private List<DispatchOrder> loadDefaultDispatchOrders() {
+        try {
+            File scheduleFile = JsonLoader.resolve(masterSchedulePath);
+            if (scheduleFile.exists()) {
+                List<DispatchMapper.ScheduleSource> schedule = JsonLoader.loadList(
+                        masterSchedulePath, DispatchMapper.ScheduleSource.class);
+                List<DispatchOrder> derived = DispatchMapper.fromSchedule(schedule);
+                if (!derived.isEmpty()) {
+                    log.info("Derived {} dispatch orders from Task 5 schedule '{}'",
+                            derived.size(), masterSchedulePath);
+                    return derived;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not derive dispatch orders from '{}': {}", masterSchedulePath, e.getMessage());
+        }
+
         try {
             File file = JsonLoader.resolve(dispatchOrdersPath);
             if (file.exists()) {

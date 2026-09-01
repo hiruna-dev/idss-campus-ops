@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MetricsBar from "@/components/MetricsBar";
+import { api } from "@/lib/api";
 
 export default function Task1Page() {
   const [result, setResult] = useState(null);
@@ -13,14 +14,8 @@ export default function Task1Page() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/task1/route", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setResult(json.data ?? json);
+      const json = await api.task1.route();
+      setResult(json);
       setMetrics(json.metrics ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
@@ -49,7 +44,7 @@ export default function Task1Page() {
         <div className="rounded-lg bg-card p-4 shadow">
           <h3 className="font-semibold">Input</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Building graph + dispatch orders
+            Task 5 schedule (if available) or dispatch orders file + building graph
           </p>
           <div className="mt-4 flex gap-2">
             <button

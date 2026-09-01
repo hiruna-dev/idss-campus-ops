@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MetricsBar from "@/components/MetricsBar";
+import { api } from "@/lib/api";
 
 export default function Task5Page() {
   const [result, setResult] = useState(null);
@@ -13,14 +14,8 @@ export default function Task5Page() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/task5/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setResult(json.data ?? json);
+      const json = await api.task5.generate();
+      setResult(json);
       setMetrics(json.metrics ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
@@ -31,7 +26,8 @@ export default function Task5Page() {
 
   const exportJson = () => {
     if (!result) return;
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    const schedule = result.schedule ?? result;
+    const blob = new Blob([JSON.stringify(schedule, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -49,7 +45,7 @@ export default function Task5Page() {
         <div className="rounded-lg bg-card p-4 shadow">
           <h3 className="font-semibold">Input</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Exams + students + rooms + slots
+            Exams + students + rooms + slots (Task 4 output preferred)
           </p>
           <div className="mt-4 flex gap-2">
             <button

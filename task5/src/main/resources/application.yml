@@ -4,7 +4,8 @@ server:
 spring:
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/idss}
+      uri: ${MONGO_URI:mongodb://localhost:27017/idss}
+      database: ${MONGO_DATABASE:idss}
   application:
     name: task5-timetable-service
 
