@@ -1,0 +1,9 @@
+server:
+  port: 8082
+
+task2:
+  input:
+    invigilators-path: ${TASK2_INVIGILATORS_PATH:../data/input/input_invigilators.json}
+  output:
+    roster-path: ${TASK2_ROSTER_PATH:../data/shared/output_proctor_roster.json}
+    metrics-path: ${TASK2_METRICS_PATH:../data/shared/output_roster_metrics.json}
