@@ -19,12 +19,16 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class AssignmentService {
+
+    private static final int MAX_REFINEMENT_ITERS = 5;
 
     private final CostMatrixBuilder costMatrixBuilder = new CostMatrixBuilder();
     private final Hungarian hungarian = new Hungarian();
@@ -69,15 +73,40 @@ public class AssignmentService {
             examById.putIfAbsent(e.exam_id, e);
         }
 
-        CostMatrix costMatrix = costMatrixBuilder.build(schedule, invigilators);
+        //iterative refinement: rebuild cost matrix with prior shift counts so +10/+1 penalties accumulate
+        Map<String, Integer> priorTotalShifts = new HashMap<>();
+        Map<String, Integer> priorShiftsByDay = new HashMap<>();
+        List<Assignment> rawAssignments = new ArrayList<>();
 
-        long start = System.nanoTime(); //marking the algorithm start time
-        int[] assignment = hungarian.solve(costMatrix.cost);
-        long elapsed = System.nanoTime() - start; //marking endtime
-        long executionTimeMs = elapsed / 1_000_000; //calculating exec time
+        long start = System.nanoTime(); //benchmark the full refinement loop
+        for (int iter = 0; iter < MAX_REFINEMENT_ITERS; iter++) {
+            CostMatrix costMatrix = costMatrixBuilder.build(
+                    schedule, invigilators, priorTotalShifts, priorShiftsByDay);
+            int[] assignment = hungarian.solve(costMatrix.cost);
+            List<Assignment> newAssignments = decodeAssignment(assignment, costMatrix,
+                    invigilatorById, examById);
 
-        List<Assignment> rawAssignments = decodeAssignment(assignment, costMatrix,
-                invigilatorById, examById);
+            //stop if the assignment stopped changing
+            if (assignmentsEqual(rawAssignments, newAssignments)) {
+                rawAssignments = newAssignments;
+                break; //converged
+            }
+            rawAssignments = newAssignments;
+
+            //update prior shifts from current assignment for next iteration
+            priorTotalShifts.clear();
+            priorShiftsByDay.clear();
+            for (Assignment a : rawAssignments) {
+                priorTotalShifts.merge(a.inv.invigilator_id, 1, Integer::sum);
+                priorShiftsByDay.merge(a.inv.invigilator_id + "|" + a.exam.date, 1, Integer::sum);
+            }
+        }
+        long elapsed = System.nanoTime() - start;
+        long executionTimeMs = elapsed / 1_000_000;
+
+        //greedy fill-up: row replication can assign the same invigilator to multiple slots of the same exam,
+        //which dedup removes leaving exams under-staffed. fill those gaps with available invigilators.
+        fillUnderStaffedExams(rawAssignments, invigilators, examById, invigilatorById);
 
         //remove assignments that violate hard constraints so they dont appear in the roster
         rawAssignments.removeIf(a -> constraintValidator.hasHardViolation(a.inv, a.exam));
@@ -168,10 +197,62 @@ public class AssignmentService {
         }
     }
 
+    //greedy fill-up for under-staffed exams after hungarian + dedup
+    private void fillUnderStaffedExams(List<Assignment> assignments,
+                                       List<Invigilator> invigilators,
+                                       Map<String, MasterScheduleEntry> examById,
+                                       Map<String, Invigilator> invigilatorById) {
+        //count current assignments per exam and per invigilator
+        Map<String, Integer> assignedPerExam = new HashMap<>();
+        Map<String, Integer> shiftsPerInv = new HashMap<>();
+        Set<String> assignedPairs = new HashSet<>();
+        for (Assignment a : assignments) {
+            assignedPerExam.merge(a.exam.exam_id, 1, Integer::sum);
+            shiftsPerInv.merge(a.inv.invigilator_id, 1, Integer::sum);
+            assignedPairs.add(a.inv.invigilator_id + "|" + a.exam.exam_id);
+        }
+
+        for (MasterScheduleEntry exam : examById.values()) {
+            int needed = exam.required_invigilators - assignedPerExam.getOrDefault(exam.exam_id, 0);
+            if (needed <= 0) continue;
+
+            //find invigilators who can take this exam, sorted by fewest current shifts (workload balancing)
+            List<Invigilator> candidates = new ArrayList<>();
+            for (Invigilator inv : invigilators) {
+                if (assignedPairs.contains(inv.invigilator_id + "|" + exam.exam_id)) continue;
+                if (shiftsPerInv.getOrDefault(inv.invigilator_id, 0) >= inv.max_total_shifts) continue;
+                if (constraintValidator.hasHardViolation(inv, exam)) continue;
+                candidates.add(inv);
+            }
+            candidates.sort(java.util.Comparator.comparingInt(
+                    i -> shiftsPerInv.getOrDefault(i.invigilator_id, 0)));
+
+            for (int i = 0; i < needed && i < candidates.size(); i++) {
+                Invigilator inv = candidates.get(i);
+                assignments.add(new Assignment(inv, exam));
+                assignedPerExam.merge(exam.exam_id, 1, Integer::sum);
+                shiftsPerInv.merge(inv.invigilator_id, 1, Integer::sum);
+                assignedPairs.add(inv.invigilator_id + "|" + exam.exam_id);
+            }
+        }
+    }
+
+    //checks if two assignment lists contain the same (invigilator, exam) pairs
+    private boolean assignmentsEqual(List<Assignment> a, List<Assignment> b) {
+        if (a.size() != b.size()) return false;
+        Set<String> aKeys = new HashSet<>();
+        for (Assignment x : a) aKeys.add(x.inv.invigilator_id + "|" + x.exam.exam_id);
+        for (Assignment x : b) {
+            if (!aKeys.contains(x.inv.invigilator_id + "|" + x.exam.exam_id)) return false;
+        }
+        return true;
+    }
+
     private List<Assignment> decodeAssignment(int[] assignment, CostMatrix costMatrix,
                                               Map<String, Invigilator> invigilatorById,
                                               Map<String, MasterScheduleEntry> examById) {
         List<Assignment> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>(); //dedup (invigilator, exam) pairs from row replication
         for (int i = 0; i < assignment.length; i++) { //iterate row by row
             String invId = costMatrix.rowInvigilatorIds.get(i);
             int col = assignment[i]; //get the col assigned for that row
@@ -182,6 +263,8 @@ public class AssignmentService {
             if (examId == null) {
                 continue;
             }
+            String pairKey = invId + "|" + examId;
+            if (!seen.add(pairKey)) continue; //skip duplicate (invigilator, exam) pair
             Invigilator inv = invigilatorById.get(invId); //get invigi info
             MasterScheduleEntry exam = examById.get(examId); //get exam info
             if (inv == null || exam == null) {

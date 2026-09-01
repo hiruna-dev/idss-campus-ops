@@ -14,9 +14,11 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,6 +28,7 @@ public class BenchmarkTest {
 
     private static final String INPUT_DIR = "../data/input/";
     private static final String OUTPUT_PATH = "../data/shared/benchmark_task2.json";
+    private static final int MAX_REFINEMENT_ITERS = 5;
 
     private final CostMatrixBuilder costMatrixBuilder = new CostMatrixBuilder();
     private final Hungarian hungarian = new Hungarian();
@@ -107,18 +110,40 @@ public class BenchmarkTest {
             examById.putIfAbsent(e.exam_id, e);
         }
 
-        CostMatrix matrix = costMatrixBuilder.build(schedule, invigilators);
+        //iterative refinement: rebuild cost matrix with prior shift counts so +10/+1 penalties accumulate
+        Map<String, Integer> priorTotalShifts = new HashMap<>();
+        Map<String, Integer> priorShiftsByDay = new HashMap<>();
+        List<Assignment> rawAssignments = new ArrayList<>();
 
         System.gc(); //stabilize baseline so the delta reflects algo memory
         long memBefore = Runtime.getRuntime().totalMemory()
                 - Runtime.getRuntime().freeMemory();
 
         long start = System.nanoTime();
-        int[] assignment = hungarian.solve(matrix.cost);
+        for (int iter = 0; iter < MAX_REFINEMENT_ITERS; iter++) {
+            CostMatrix matrix = costMatrixBuilder.build(
+                    schedule, invigilators, priorTotalShifts, priorShiftsByDay);
+            int[] assignment = hungarian.solve(matrix.cost);
+            List<Assignment> newAssignments = decode(assignment, matrix,
+                    invigilatorById, examById);
+
+            if (assignmentsEqual(rawAssignments, newAssignments)) {
+                rawAssignments = newAssignments;
+                break; //converged
+            }
+            rawAssignments = newAssignments;
+
+            priorTotalShifts.clear();
+            priorShiftsByDay.clear();
+            for (Assignment a : rawAssignments) {
+                priorTotalShifts.merge(a.inv.invigilator_id, 1, Integer::sum);
+                priorShiftsByDay.merge(a.inv.invigilator_id + "|" + a.exam.date, 1, Integer::sum);
+            }
+        }
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
-        List<Assignment> rawAssignments = decode(assignment, matrix,
-                invigilatorById, examById);
+        //greedy fill-up: same as AssignmentService, fills under-staffed exams after hungarian + dedup
+        fillUnderStaffedExams(rawAssignments, invigilators, examById);
 
         long memAfter = Runtime.getRuntime().totalMemory()
                 - Runtime.getRuntime().freeMemory();
@@ -142,11 +167,60 @@ public class BenchmarkTest {
         return row;
     }
 
+    //greedy fill-up for under-staffed exams after hungarian + dedup
+    private void fillUnderStaffedExams(List<Assignment> assignments,
+                                       List<Invigilator> invigilators,
+                                       Map<String, MasterScheduleEntry> examById) {
+        Map<String, Integer> assignedPerExam = new HashMap<>();
+        Map<String, Integer> shiftsPerInv = new HashMap<>();
+        Set<String> assignedPairs = new HashSet<>();
+        for (Assignment a : assignments) {
+            assignedPerExam.merge(a.exam.exam_id, 1, Integer::sum);
+            shiftsPerInv.merge(a.inv.invigilator_id, 1, Integer::sum);
+            assignedPairs.add(a.inv.invigilator_id + "|" + a.exam.exam_id);
+        }
+
+        for (MasterScheduleEntry exam : examById.values()) {
+            int needed = exam.required_invigilators - assignedPerExam.getOrDefault(exam.exam_id, 0);
+            if (needed <= 0) continue;
+
+            List<Invigilator> candidates = new ArrayList<>();
+            for (Invigilator inv : invigilators) {
+                if (assignedPairs.contains(inv.invigilator_id + "|" + exam.exam_id)) continue;
+                if (shiftsPerInv.getOrDefault(inv.invigilator_id, 0) >= inv.max_total_shifts) continue;
+                if (constraintValidator.hasHardViolation(inv, exam)) continue;
+                candidates.add(inv);
+            }
+            candidates.sort(java.util.Comparator.comparingInt(
+                    i -> shiftsPerInv.getOrDefault(i.invigilator_id, 0)));
+
+            for (int i = 0; i < needed && i < candidates.size(); i++) {
+                Invigilator inv = candidates.get(i);
+                assignments.add(new Assignment(inv, exam));
+                assignedPerExam.merge(exam.exam_id, 1, Integer::sum);
+                shiftsPerInv.merge(inv.invigilator_id, 1, Integer::sum);
+                assignedPairs.add(inv.invigilator_id + "|" + exam.exam_id);
+            }
+        }
+    }
+
+    //checks if two assignment lists contain the same (invigilator, exam) pairs
+    private boolean assignmentsEqual(List<Assignment> a, List<Assignment> b) {
+        if (a.size() != b.size()) return false;
+        Set<String> aKeys = new HashSet<>();
+        for (Assignment x : a) aKeys.add(x.inv.invigilator_id + "|" + x.exam.exam_id);
+        for (Assignment x : b) {
+            if (!aKeys.contains(x.inv.invigilator_id + "|" + x.exam.exam_id)) return false;
+        }
+        return true;
+    }
+
     //mirrors AssignmentService.decodeAssignment - kept local so the benchmark doesnt couple to the spring service
     private List<Assignment> decode(int[] assignment, CostMatrix matrix,
                                     Map<String, Invigilator> invigilatorById,
                                     Map<String, MasterScheduleEntry> examById) {
         List<Assignment> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>(); //dedup (invigilator, exam) pairs from row replication
         for (int i = 0; i < assignment.length; i++) {
             String invId = matrix.rowInvigilatorIds.get(i);
             int col = assignment[i];
@@ -157,6 +231,8 @@ public class BenchmarkTest {
             if (examId == null) {
                 continue;
             }
+            String pairKey = invId + "|" + examId;
+            if (!seen.add(pairKey)) continue; //skip duplicate pair
             Invigilator inv = invigilatorById.get(invId);
             MasterScheduleEntry exam = examById.get(examId);
             if (inv == null || exam == null) {

@@ -59,9 +59,13 @@ public class CostMatrixBuilder {
             }
         }
 
+        //replicate each invigilator max_total_shifts times so one invigilator can match multiple slots
         List<String> rowInvigilatorIds = new ArrayList<>();
         for (Invigilator inv : invigilators) {
-            rowInvigilatorIds.add(inv.invigilator_id);
+            int replicas = Math.max(1, inv.max_total_shifts);
+            for (int r = 0; r < replicas; r++) {
+                rowInvigilatorIds.add(inv.invigilator_id);
+            }
         }
 
         //caclulating size
@@ -90,7 +94,7 @@ public class CostMatrixBuilder {
                     cost[i][j] = cellCost(
                             invigilatorById.get(invId),
                             examById.get(examId),
-                            priorTotalShifts, //passed at build method params. takes 0 if none provided
+                            priorTotalShifts,
                             priorShiftsByDay);
                 }
             }

@@ -131,4 +131,19 @@ public class AssignmentServiceEdgeCaseTest {
         assertEquals(1, roster.roster.size());
         assertEquals("EX_1", roster.roster.get(0).exam_id);
     }
+
+    @Test
+    void sameDayExamsAssignedToOneInvigilatorWhenCapacityAllows() {
+        //2 exams same date, different sessions. 1 invigilator who can do 2 shifts
+        MasterScheduleEntry e1 = exam("EX_1", "C1", "2026-08-20", "Morning", 1, 1);
+        MasterScheduleEntry e2 = exam("EX_2", "C2", "2026-08-20", "Afternoon", 1, 1);
+        Invigilator inv = inv("INV_01", 2, 2, List.of(), List.of(1), List.of());
+
+        ProctorRoster roster = service.assignInvigilators(List.of(e1, e2), List.of(inv));
+
+        assertEquals("OPTIMAL", roster.status);
+        //both exams should be assigned to INV_01 (row replication allows multiple slots per invigilator)
+        assertEquals("INV_01", roster.roster.get(0).assigned_invigilators.get(0).invigilator_id);
+        assertEquals("INV_01", roster.roster.get(1).assigned_invigilators.get(0).invigilator_id);
+    }
 }
