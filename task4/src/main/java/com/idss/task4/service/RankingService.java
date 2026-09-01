@@ -1,7 +1,6 @@
 package com.idss.task4.service;
 
 import com.idss.common.model.Room;
-import com.idss.common.util.JsonLoader;
 import com.idss.task4.algorithm.AHPEngine;
 import com.idss.task4.algorithm.FilterEngine;
 import com.idss.task4.algorithm.RoomRegistry;
@@ -13,10 +12,10 @@ import com.idss.task4.dto.RoomScore;
 import com.idss.task4.repository.RoomRankingDocument;
 import com.idss.task4.repository.RoomRankingRepository;
 
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +41,7 @@ import java.util.PriorityQueue;
 @Service
 public class RankingService {
 
-    private static final String ROOM_MASTER_PATH = "data/input/input_room_master.json";
+    private static final String ROOMS_COLLECTION = "rooms";
     private static final String ALGORITHM_LABEL = "AHP (weights) + TOPSIS (ranking)";
 
     private RoomRegistry roomRegistry;
@@ -50,9 +49,11 @@ public class RankingService {
     private final AHPEngine ahpEngine;
     private final TOPSISEngine topsisEngine;
     private final RoomRankingRepository rankingRepository;
+    private final MongoTemplate mongoTemplate;
 
-    public RankingService(RoomRankingRepository rankingRepository) {
+    public RankingService(RoomRankingRepository rankingRepository, MongoTemplate mongoTemplate) {
         this.rankingRepository = rankingRepository;
+        this.mongoTemplate = mongoTemplate;
         this.filterEngine = new FilterEngine();
         // Weights are derived via AHP (task_4_plan.md Section 6) rather than
         // asserted — see AHPEngine for the pairwise comparison + CR check.
@@ -63,12 +64,17 @@ public class RankingService {
 
     /**
      * Loads the room master data at startup and builds the HashMap registry.
+     *
+     * <p>Reads from the {@code rooms} Mongo collection (master_context_file.md
+     * Section 5), seeded by {@code DatabaseSeeder} from {@code input_room_master.json}.
+     * Local JSON files are used only for algorithm benchmarking (MCF Section 2.3/9.1),
+     * not for this production path.</p>
      */
     @PostConstruct
-    public void init() throws IOException {
-        List<Room> rooms = JsonLoader.loadList(ROOM_MASTER_PATH, Room.class);
+    public void init() {
+        List<Room> rooms = mongoTemplate.findAll(Room.class, ROOMS_COLLECTION);
         this.roomRegistry = new RoomRegistry(rooms);
-        System.out.println("[Task4] RoomRegistry loaded: " + roomRegistry.size() + " rooms");
+        System.out.println("[Task4] RoomRegistry loaded: " + roomRegistry.size() + " rooms from Mongo '" + ROOMS_COLLECTION + "' collection");
     }
 
     /**
