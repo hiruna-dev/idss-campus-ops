@@ -1,5 +1,6 @@
 package com.idss.task2.controller;
 
+import com.idss.common.config.Canonical;
 import com.idss.common.model.Invigilator;
 import com.idss.common.util.JsonLoader;
 import com.idss.task2.model.MasterScheduleEntry;
@@ -41,27 +42,32 @@ public class AssignmentController {
     //assigns invigilators to exams in the given master schedule
     //loads invigilators from json, runs the hungarian algo via service, writes output files
     @PostMapping("/assign")
-    public ResponseEntity<ProctorRoster> assign(@RequestBody List<MasterScheduleEntry> schedule) {
-        //loading invigilators from the input json file
-        List<Invigilator> invigilators;
+    public ResponseEntity<?> assign(@RequestBody List<MasterScheduleEntry> schedule) {
         try {
-            invigilators = JsonLoader.loadList(invigilatorsPath, Invigilator.class);
+            //loading invigilators from the input json file
+            List<Invigilator> invigilators = JsonLoader.loadList(invigilatorsPath, Invigilator.class);
+
+            //running the assignment via the service (cost matrix -> hungarian -> decode -> save to mongo)
+            ProctorRoster roster = assignmentService.assignInvigilators(schedule, invigilators);
+
+            //writing the roster and metrics to shared json files (non-fatal if it fails)
+            try {
+                JsonLoader.write(rosterOutputPath, roster);
+                JsonLoader.write(metricsOutputPath, assignmentService.getLastMetrics());
+            } catch (Exception e) {
+                //file write failed but the roster is still returned to the caller
+            }
+
+            //422 for INFEASIBLE, 200 otherwise
+            if (Canonical.STATUS_INFEASIBLE.equals(roster.status)) {
+                return ResponseEntity.unprocessableEntity().body(roster);
+            }
+            return ResponseEntity.ok(roster);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            //unexpected error (bad input, missing file, etc)
+            String msg = e.getMessage() != null ? e.getMessage() : "Unexpected error";
+            return ResponseEntity.internalServerError().body(Map.of("error", msg));
         }
-
-        //running the assignment via the service (cost matrix -> hungarian -> decode -> save to mongo)
-        ProctorRoster roster = assignmentService.assignInvigilators(schedule, invigilators);
-
-        //writing the roster and metrics to shared json files (non-fatal if it fails)
-        try {
-            JsonLoader.write(rosterOutputPath, roster);
-            JsonLoader.write(metricsOutputPath, assignmentService.getLastMetrics());
-        } catch (Exception e) {
-            //file write failed but the roster is still returned to the caller
-        }
-
-        return ResponseEntity.ok(roster);
     }
 
     //gets the roster entry for a single exam by exam_id

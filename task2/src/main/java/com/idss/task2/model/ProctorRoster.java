@@ -12,4 +12,6 @@ public class ProctorRoster {
     public String status;
     public int total_shifts_allocated;
     public List<RosterEntry> roster;
+    public String reason;            //only set when status == INFEASIBLE
+    public String suggested_remedy;  //only set when status == INFEASIBLE
 }

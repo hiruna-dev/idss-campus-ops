@@ -40,7 +40,24 @@ public class AssignmentService {
 
     public ProctorRoster assignInvigilators(List<MasterScheduleEntry> schedule,
                                             List<Invigilator> invigilators) {
+        //edge case: empty schedule returns a clean feasible roster without running hungarian
+        if (schedule == null || schedule.isEmpty()) {
+            return buildEmptyRoster(Canonical.STATUS_FEASIBLE, null, null);
+        }
+
         validateInputs(schedule, invigilators);
+
+        //edge case: total required shifts exceeds total invigilator capacity
+        int totalRequired = 0;
+        for (MasterScheduleEntry e : schedule) totalRequired += e.required_invigilators;
+        int totalCapacity = 0;
+        for (Invigilator inv : invigilators) totalCapacity += inv.max_total_shifts;
+        if (totalRequired > totalCapacity) {
+            return buildEmptyRoster(Canonical.STATUS_INFEASIBLE,
+                    "Insufficient invigilator capacity: " + totalRequired
+                            + " shifts required, " + totalCapacity + " available",
+                    "Add more invigilators or increase max_total_shifts");
+        }
 
         //extracting data
         Map<String, Invigilator> invigilatorById = new HashMap<>();
@@ -62,17 +79,42 @@ public class AssignmentService {
         List<Assignment> rawAssignments = decodeAssignment(assignment, costMatrix,
                 invigilatorById, examById);
 
+        //remove assignments that violate hard constraints so they dont appear in the roster
+        rawAssignments.removeIf(a -> constraintValidator.hasHardViolation(a.inv, a.exam));
+
         ConstraintValidator.ConstraintResult constraintResult =
                 constraintValidator.validate(rawAssignments);
         int violations = constraintResult.violations;
         double fairnessVariance = fairnessCalculator
                 .calculate(rawAssignments, invigilators).fairnessVariance;
 
-        String status = violations > 0
-                ? Canonical.STATUS_INFEASIBLE
-                : Canonical.STATUS_OPTIMAL;
+        //check if any exam has fewer invigilators than required after filtering
+        Map<String, Integer> assignedCount = new HashMap<>();
+        for (Assignment a : rawAssignments) {
+            assignedCount.merge(a.exam.exam_id, 1, Integer::sum);
+        }
+        List<String> underStaffed = new ArrayList<>();
+        for (MasterScheduleEntry exam : examById.values()) {
+            if (assignedCount.getOrDefault(exam.exam_id, 0) < exam.required_invigilators) {
+                underStaffed.add(exam.exam_id);
+            }
+        }
 
-        ProctorRoster roster = buildRoster(rawAssignments, examById, status);
+        String status;
+        String reason = null;
+        String remedy = null;
+        if (!underStaffed.isEmpty()) {
+            status = Canonical.STATUS_INFEASIBLE;
+            reason = "Exams could not be fully staffed: " + String.join(", ", underStaffed);
+            remedy = "Add invigilators or remove course restrictions for these exams";
+        } else if (violations > 0) {
+            status = Canonical.STATUS_INFEASIBLE;
+            reason = constraintResult.violationDescriptions.get(0);
+        } else {
+            status = Canonical.STATUS_OPTIMAL;
+        }
+
+        ProctorRoster roster = buildRoster(rawAssignments, examById, status, reason, remedy);
         rosterRepository.save(roster);
 
         RosterMetrics metrics = buildMetrics(executionTimeMs, violations,
@@ -115,9 +157,6 @@ public class AssignmentService {
     //method for error handling
     private void validateInputs(List<MasterScheduleEntry> schedule,
                                 List<Invigilator> invigilators) {
-        if (schedule == null || schedule.isEmpty()) {
-            throw new IllegalArgumentException("Schedule must not be empty");
-        }
         if (invigilators == null || invigilators.isEmpty()) {
             throw new IllegalArgumentException("Invigilators list must not be empty");
         }
@@ -155,7 +194,7 @@ public class AssignmentService {
 
     private ProctorRoster buildRoster(List<Assignment> assignments,
                                       Map<String, MasterScheduleEntry> examById,
-                                      String status) {
+                                      String status, String reason, String remedy) {
         Map<String, List<AssignedInvigilator>> invigilatorsByExam = new LinkedHashMap<>();
         for (MasterScheduleEntry exam : examById.values()) {
             invigilatorsByExam.put(exam.exam_id, new ArrayList<>());
@@ -193,6 +232,23 @@ public class AssignmentService {
         roster.status = status;
         roster.total_shifts_allocated = totalShifts;
         roster.roster = rosterEntries;
+        roster.reason = reason;
+        roster.suggested_remedy = remedy;
+        return roster;
+    }
+
+    //builds a roster for early-return cases (empty schedule or insufficient capacity)
+    private ProctorRoster buildEmptyRoster(String status, String reason, String remedy) {
+        ProctorRoster roster = new ProctorRoster();
+        roster.generation_timestamp = Instant.now().toString();
+        roster.status = status;
+        roster.total_shifts_allocated = 0;
+        roster.roster = new ArrayList<>();
+        roster.reason = reason;
+        roster.suggested_remedy = remedy;
+
+        //set metrics so /benchmark still returns something
+        lastMetrics = buildMetrics(0, 0, 0.0, 0, status);
         return roster;
     }
 

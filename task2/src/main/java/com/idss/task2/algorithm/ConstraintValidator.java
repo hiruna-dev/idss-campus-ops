@@ -21,6 +21,21 @@ public class ConstraintValidator {
         }
     }
 
+    //true if this invigilator cannot validly cover this exam (restricted course or unavailable)
+    public boolean hasHardViolation(Invigilator inv, MasterScheduleEntry exam) {
+        if (inv.restricted_courses != null && inv.restricted_courses.contains(exam.course_code)) {
+            return true;
+        }
+        if (inv.unavailability != null) {
+            for (Invigilator.Unavailability u : inv.unavailability) {
+                if (u.date.equals(exam.date) && u.session.equals(exam.session)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public ConstraintResult validate(List<Assignment> assignments) {
         List<String> descriptions = new ArrayList<>();
 
