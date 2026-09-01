@@ -1,0 +1,116 @@
+[
+  {
+    "invigilator_id": "INV_01",
+    "name": "Dr. Aruni Silva",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 8,
+    "restricted_courses": ["PDSA201"],
+    "preferred_floors": [1, 2],
+    "unavailability": [{ "date": "2026-08-20", "session": "Afternoon" }]
+  },
+  {
+    "invigilator_id": "INV_02",
+    "name": "Dr. Bandara Perera",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 8,
+    "restricted_courses": ["DBS301"],
+    "preferred_floors": [1, 2, 3],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_03",
+    "name": "Ms. Chathuri Fernando",
+    "max_shifts_per_day": 1,
+    "max_total_shifts": 4,
+    "restricted_courses": [],
+    "preferred_floors": [1],
+    "unavailability": [{ "date": "2026-08-21", "session": "Morning" }]
+  },
+  {
+    "invigilator_id": "INV_04",
+    "name": "Mr. Dinesh Jayawardena",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 10,
+    "restricted_courses": [],
+    "preferred_floors": [2, 3],
+    "unavailability": [
+      { "date": "2026-08-20", "session": "Morning" },
+      { "date": "2026-08-22", "session": "Afternoon" }
+    ]
+  },
+  {
+    "invigilator_id": "INV_05",
+    "name": "Dr. Erandi Wickramasinghe",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 6,
+    "restricted_courses": ["OOP101", "WEB101"],
+    "preferred_floors": [1, 2],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_06",
+    "name": "Mr. Farhan Ahamed",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 6,
+    "restricted_courses": [],
+    "preferred_floors": [3],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_07",
+    "name": "Ms. Gayathri Rajapaksa",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 8,
+    "restricted_courses": [],
+    "preferred_floors": [1, 2, 3],
+    "unavailability": [{ "date": "2026-08-21", "session": "Afternoon" }]
+  },
+  {
+    "invigilator_id": "INV_08",
+    "name": "Dr. Harsha Senanayake",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 9,
+    "restricted_courses": [],
+    "preferred_floors": [1, 2],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_09",
+    "name": "Ms. Ishara Gunawardena",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 6,
+    "restricted_courses": ["AI303"],
+    "preferred_floors": [1, 2, 3],
+    "unavailability": [{ "date": "2026-08-22", "session": "Morning" }]
+  },
+  {
+    "invigilator_id": "INV_10",
+    "name": "Mr. Janith Kumara",
+    "max_shifts_per_day": 1,
+    "max_total_shifts": 5,
+    "restricted_courses": [],
+    "preferred_floors": [1, 2],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_11",
+    "name": "Dr. Kavindi Wijesekara",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 7,
+    "restricted_courses": [],
+    "preferred_floors": [2, 3],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_12",
+    "name": "Mr. Lahiru Dissanayake",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 10,
+    "restricted_courses": [],
+    "preferred_floors": [1, 2, 3],
+    "unavailability": [
+      { "date": "2026-08-20", "session": "Afternoon" },
+      { "date": "2026-08-21", "session": "Morning" }
+    ]
+  }
+]
