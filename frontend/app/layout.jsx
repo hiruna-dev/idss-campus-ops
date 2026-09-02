@@ -1,59 +1,73 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
+"use client";
+
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata = {
-  title: "IDSS — University Exam Operations",
-  description: "Intelligent Decision Support System for Campus & Exam Operations",
-};
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard, Route, Users, GitBranch, Building2, CalendarDays } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/task1", label: "Task 1 — Routing" },
-  { href: "/task2", label: "Task 2 — Invigilator" },
-  { href: "/task3", label: "Task 3 — Clash Detection" },
-  { href: "/task4", label: "Task 4 — Room Ranking" },
-  { href: "/task5", label: "Task 5 — Timetable" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/task1", label: "Paper Routing", icon: Route },
+  { href: "/task2", label: "Invigilators", icon: Users },
+  { href: "/task3", label: "Clash Detection", icon: GitBranch },
+  { href: "/task4", label: "Room Ranking", icon: Building2 },
+  { href: "/task5", label: "Timetable", icon: CalendarDays },
 ];
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-bg text-idss-text">
-        <header className="bg-primary text-white shadow-md">
-          <div className="mx-auto max-w-7xl px-4">
-            <h1 className="py-3 text-lg font-bold">
-              IDSS — University Exam Operations
-            </h1>
-            <nav className="flex flex-wrap gap-1 pb-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded px-3 py-1.5 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
+    <html lang="en" className="dark">
+      <head>
+        <title>IDSS — University Exam Operations</title>
+        <meta name="description" content="Intelligent Decision Support System for University Campus & Exam Operations" />
+      </head>
+      <body className="antialiased min-h-screen flex flex-col bg-background text-foreground">
+        
+        {/* Top Bar Navigation */}
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="font-bold text-xl tracking-tight text-primary">
+                IDSS <span className="text-foreground font-medium text-sm ml-2 hidden sm:inline-block">Exam Operations</span>
+              </Link>
+            </div>
+            <nav className="flex items-center space-x-1 text-sm font-medium">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary/15 text-primary font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden md:inline">{item.label}</span>
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
+
+        {/* Main Content Area */}
+        <main className="flex-1 container mx-auto px-4 py-8 flex flex-col gap-8">
           {children}
         </main>
+
+        {/* Footer */}
+        <footer className="border-t border-border bg-muted/40 py-3 mt-auto">
+          <div className="container mx-auto px-4 text-center text-xs text-muted-foreground">
+            IDSS — Intelligent Decision Support System • University Exam Operations
+          </div>
+        </footer>
+
       </body>
     </html>
   );
