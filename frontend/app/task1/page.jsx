@@ -1,214 +1,277 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState } from "react";
+import { AccessibilityIcon, ClockIcon } from "lucide-react";
+import { Panel } from "@/components/Panel";
+import { ModuleHeader } from "@/components/ModuleHeader";
 import MetricsBar from "@/components/MetricsBar";
-import { dummyRoutes, dummyMetrics, buildingGraphNodes, buildingGraphEdges } from "@/lib/types/dummyData";
-import { exportJson } from "@/lib/utils/exportJson";
+import { RunButton } from "@/components/RunButton";
+import { EmptyState } from "@/components/EmptyState";
+import { JsonPreview } from "@/components/JsonPreview";
+import { StatusBadge } from "@/components/StatusBadge";
+import { useModuleRun } from "@/contexts/PipelineContext";
+import { moduleById } from "@/lib/modules";
+import { buildingGraph as sampleBuildingGraph, dispatchOrders as sampleDispatchOrders } from "@/lib/data/buildingGraph";
+import { deliveryRoutes as sampleRoutes, routingMetrics } from "@/lib/data/outputs";
 import { api } from "@/lib/api/index";
-import { Play, Download, MapPin, CheckCircle2, Loader2 } from "lucide-react";
 
-export default function Task1Page() {
-  const [result, setResult] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(false);
+const FLOORS = [3, 2, 1, 0];
+const BAND_HEIGHT = 104;
+const MAP_WIDTH = 470;
 
-  const dispatchRequest = {
-    dispatch_id: "DSP_001",
-    destination_room_id: "R101",
-    requires_step_free_access: true,
-  };
+const scaleX = (x) => 60 + x * 8.6;
+const bandTop = (floor) => FLOORS.indexOf(floor) * BAND_HEIGHT + 14;
+const scaleY = (node) => bandTop(node.floor) + ((node.coordinates.y - 6) / 20) * 66;
 
-  async function handleRun() {
-    setLoading(true);
-    try {
-      const data = await api.task1.route(dispatchRequest);
-      setResult(data);
-      setMetrics(data.metrics || dummyMetrics.task1);
-    } catch {
-      // Backend not available — use dummy data
-      setResult(dummyRoutes);
-      setMetrics(dummyMetrics.task1);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const pathData = result || dummyRoutes;
-  const pathSet = new Set(pathData.path_sequence);
-
-  // Build edge lookup for SVG
-  const edgeLines = buildingGraphEdges.map((e) => {
-    const from = buildingGraphNodes.find((n) => n.id === e.from);
-    const to = buildingGraphNodes.find((n) => n.id === e.to);
-    if (!from || !to) return null;
-    const isOnPath =
-      pathData.path_sequence.some((node, i) => {
-        const next = pathData.path_sequence[i + 1];
-        return (node === e.from && next === e.to) || (node === e.to && next === e.from);
-      });
-    return { ...e, x1: from.x, y1: from.y, x2: to.x, y2: to.y, isOnPath };
-  }).filter(Boolean);
+function FloorMap({ route, graph, nodeById, uniqueEdges }) {
+  const pathPairs = new Set(
+    route.path_sequence.slice(0, -1).map((node, index) => [node, route.path_sequence[index + 1]].sort().join("|"))
+  );
+  const onPath = new Set(route.path_sequence);
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Paper Routing</h1>
-        <p className="text-muted-foreground mt-1">Find the shortest path to deliver exam papers from the vault to the exam hall.</p>
-      </div>
+    <svg
+      viewBox={`0 0 ${MAP_WIDTH} ${FLOORS.length * BAND_HEIGHT + 10}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={`Delivery path for ${route.dispatch_id} from ${route.source_vault} to ${route.destination_room}`}
+    >
+      {FLOORS.map((floor) => (
+        <g key={floor}>
+          <rect x={44} y={bandTop(floor) - 12} width={MAP_WIDTH - 56} height={BAND_HEIGHT - 14} rx={4} fill={floor % 2 === 0 ? "#F5F7FA" : "#FFFFFF"} stroke="#DCE3EA" />
+          <text x={16} y={bandTop(floor) + 26} className="mono" fontSize="10" fill="#8A98A2">
+            {floor === 0 ? "GND" : `F${floor}`}
+          </text>
+        </g>
+      ))}
 
-      <MetricsBar metrics={metrics} />
-      
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Input Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-primary" />
-              Delivery Request
-            </CardTitle>
-            <CardDescription>Configure where to deliver exam papers.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Dispatch ID</span>
-                <span className="text-sm font-medium">{dispatchRequest.dispatch_id}</span>
+      {uniqueEdges.map((edge) => {
+        const from = nodeById.get(edge.from);
+        const to = nodeById.get(edge.to);
+        if (!from || !to) return null;
+        const key = [edge.from, edge.to].sort().join("|");
+        const active = pathPairs.has(key);
+        return (
+          <line
+            key={key}
+            x1={scaleX(from.coordinates.x)}
+            y1={scaleY(from)}
+            x2={scaleX(to.coordinates.x)}
+            y2={scaleY(to)}
+            stroke={active ? "#0F4C75" : "#DCE3EA"}
+            strokeWidth={active ? 3 : 1.25}
+            strokeDasharray={edge.stepFree ? undefined : "4 3"}
+          />
+        );
+      })}
+
+      {graph.map((node) => {
+        const active = onPath.has(node.node_id);
+        const isEndpoint = node.node_id === route.source_vault || node.node_id === route.destination_room;
+        return (
+          <g key={node.node_id} opacity={active ? 1 : 0.5}>
+            <circle
+              cx={scaleX(node.coordinates.x)}
+              cy={scaleY(node)}
+              r={isEndpoint ? 7 : active ? 5.5 : 4}
+              fill={isEndpoint ? "#0F4C75" : active ? "#3282B8" : node.is_accessible ? "#FFFFFF" : "#EEF2F5"}
+              stroke={active ? "#0F4C75" : "#B7C4CE"}
+              strokeWidth={1.5}
+            />
+            <text x={scaleX(node.coordinates.x)} y={scaleY(node) - 10} textAnchor="middle" className="mono" fontSize="8" fill={active ? "#0F4C75" : "#8A98A2"} fontWeight={active ? 600 : 400}>
+              {node.node_id}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+export default function Task1Page() {
+  const module = moduleById("task1");
+  const { run, execute } = useModuleRun("task1");
+  const [liveGraph, setLiveGraph] = useState(null);
+  const [liveDispatchOrders, setLiveDispatchOrders] = useState(null);
+  const [dispatchId, setDispatchId] = useState(sampleDispatchOrders[0].dispatch_id);
+  const complete = run.state === "complete";
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([api.task1.getBuildingGraph(), api.task1.getDispatchOrders()]).then(([graphResult, ordersResult]) => {
+      if (cancelled) return;
+      if (graphResult.status === "fulfilled") setLiveGraph(graphResult.value);
+      if (ordersResult.status === "fulfilled") setLiveDispatchOrders(ordersResult.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const buildingGraph = liveGraph ?? sampleBuildingGraph;
+  const dispatchOrders = liveDispatchOrders ?? sampleDispatchOrders;
+
+  const nodeById = useMemo(() => new Map(buildingGraph.map((node) => [node.node_id, node])), [buildingGraph]);
+  const uniqueEdges = useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    buildingGraph.forEach((node) => {
+      node.adjacent_edges.forEach((edge) => {
+        const key = [node.node_id, edge.target_node].sort().join("|");
+        if (seen.has(key) || !nodeById.has(edge.target_node)) return;
+        seen.add(key);
+        list.push({ from: node.node_id, to: edge.target_node, stepFree: edge.is_step_free });
+      });
+    });
+    return list;
+  }, [buildingGraph, nodeById]);
+
+  const routes = run.data?.routes ?? (Array.isArray(run.data) ? run.data : null) ?? sampleRoutes;
+  const route = routes.find((item) => item.dispatch_id === dispatchId) ?? routes[0];
+  const order = dispatchOrders.find((item) => item.dispatch_id === dispatchId) ?? dispatchOrders[0];
+
+  return (
+    <div>
+      <ModuleHeader
+        module={module}
+        description="Routes exam papers from the security vault to each exam room across a multi-floor building graph using A* with a 3D Euclidean heuristic and a floor-change penalty, enforcing step-free paths where required."
+      />
+
+      <div className="grid gap-6 px-8 py-7 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <Panel
+            title="Input"
+            subtitle="Building graph + dispatch orders"
+            actions={<RunButton label="Route" running={run.state === "running"} onClick={() => execute(dispatchOrders, { routes: sampleRoutes })} />}
+          >
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Graph nodes</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{buildingGraph.length}</dd>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Destination Room</span>
-                <Badge variant="outline">{dispatchRequest.destination_room_id}</Badge>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Dispatches</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{dispatchOrders.length}</dd>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-muted-foreground">Step-Free Access Required</span>
-                <Badge className="bg-green-500/15 text-green-500 hover:bg-green-500/20">Yes</Badge>
-              </div>
+            </dl>
+            <div className="mt-5 space-y-2">
+              <JsonPreview fileName="input_building_graph.json" payload={buildingGraph} />
+              <JsonPreview fileName="input_dispatch_orders.json" payload={dispatchOrders} />
             </div>
-            <Button className="w-full" onClick={handleRun} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-              {loading ? "Calculating Route..." : "Find Best Route"}
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Output Card — Turn-by-turn */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Delivery Steps</CardTitle>
-            <CardDescription>Step-by-step route from vault to destination.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Step</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pathData.path_sequence.map((node, index) => {
-                  const nodeInfo = buildingGraphNodes.find(n => n.id === node);
-                  return (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">
-                          {index + 1}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <span className="font-medium">{nodeInfo?.label || node}</span>
-                          <span className="text-xs text-muted-foreground ml-2">({node})</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {result && <CheckCircle2 className="w-4 h-4 text-green-500 inline-block" />}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            {pathData.step_free_verified && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-green-500">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Route is step-free accessible (elevator path used)</span>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="border-t pt-4">
-            <Button variant="outline" className="w-full" onClick={() => exportJson(pathData, "output_delivery_route.json")}>
-              <Download className="w-4 h-4 mr-2" /> Download Route Data
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+          </Panel>
 
-      {/* Floor Map */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Building Floor Map</CardTitle>
-          <CardDescription>Visual path from vault to destination. Highlighted route shows the calculated path.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full aspect-[2/1] bg-muted/30 border border-border rounded-lg overflow-hidden p-4">
-            <svg width="100%" height="100%" viewBox="0 0 400 220" className="select-none">
-              {/* Floor Labels */}
-              <text x="5" y="45" className="text-[10px] fill-muted-foreground font-semibold">1st Floor</text>
-              <text x="5" y="165" className="text-[10px] fill-muted-foreground font-semibold">Ground</text>
-              <line x1="0" y1="130" x2="400" y2="130" stroke="var(--border)" strokeWidth="1" strokeDasharray="6 3" />
+          {complete && (
+            <Panel title="Dispatches" subtitle="Select to inspect a route" bodyClassName="p-0">
+              <ul className="divide-y divide-line">
+                {routes.map((item) => (
+                  <li key={item.dispatch_id}>
+                    <button
+                      type="button"
+                      onClick={() => setDispatchId(item.dispatch_id)}
+                      className={`flex w-full items-center gap-3 px-5 py-3 text-left transition-colors duration-150 ease-out hover:bg-canvas ${
+                        item.dispatch_id === dispatchId ? "bg-primary-soft" : ""
+                      }`}
+                    >
+                      <span className="mono text-xs font-semibold text-primary">{item.dispatch_id}</span>
+                      <span className="flex-1 text-xs text-ink-muted">
+                        {item.course_code} → {item.destination_room}
+                      </span>
+                      <span className="mono text-xs text-ink">{item.estimated_transit_time_seconds}s</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
+        </div>
 
-              {/* Edges */}
-              {edgeLines.map((e, i) => (
-                <line
-                  key={i}
-                  x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
-                  stroke={e.isOnPath ? "var(--primary)" : "var(--border)"}
-                  strokeWidth={e.isOnPath ? 3 : 1.5}
-                  strokeLinecap="round"
-                  opacity={e.isOnPath ? 1 : 0.5}
-                />
-              ))}
-
-              {/* Nodes */}
-              {buildingGraphNodes.map((node) => {
-                const isOnPath = pathSet.has(node.id);
-                const isStart = pathData.path_sequence[0] === node.id;
-                const isEnd = pathData.path_sequence[pathData.path_sequence.length - 1] === node.id;
-                return (
-                  <g key={node.id}>
-                    <circle
-                      cx={node.x} cy={node.y}
-                      r={isStart || isEnd ? 14 : 10}
-                      fill={isOnPath ? "var(--primary)" : "var(--muted)"}
-                      stroke={isOnPath ? "var(--primary)" : "var(--border)"}
-                      strokeWidth={isOnPath ? 2 : 1}
+        <div className="flex flex-col gap-6">
+          {complete ? (
+            <>
+              <Panel
+                title={`Floor map — ${route.dispatch_id}`}
+                subtitle="Solid edges are step-free; dashed edges are staircases"
+                actions={
+                  <div className="flex items-center gap-2">
+                    {route.requires_step_free_access && (
+                      <StatusBadge label="Step-free required" tone="warning" icon={<AccessibilityIcon className="h-3.5 w-3.5" />} />
+                    )}
+                    <StatusBadge
+                      label={`${route.estimated_transit_time_seconds}s · ${route.total_distance_meters} m`}
+                      tone={route.within_time_limit ? "success" : "danger"}
+                      icon={<ClockIcon className="h-3.5 w-3.5" />}
                     />
-                    <text
-                      x={node.x} y={node.y + 3}
-                      textAnchor="middle"
-                      className={`text-[7px] font-bold ${isOnPath ? "fill-primary-foreground" : "fill-muted-foreground"}`}
-                    >
-                      {isStart ? "START" : isEnd ? "END" : node.label.substring(0, 5)}
-                    </text>
-                    <text
-                      x={node.x} y={node.y + 24}
-                      textAnchor="middle"
-                      className="text-[8px] fill-muted-foreground"
-                    >
-                      {node.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </CardContent>
-      </Card>
+                  </div>
+                }
+              >
+                <FloorMap route={route} graph={buildingGraph} nodeById={nodeById} uniqueEdges={uniqueEdges} />
+              </Panel>
+
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+                <Panel title="Turn-by-turn manifest" subtitle={route.path_sequence.join(" → ")} bodyClassName="p-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-faint">
+                        <th className="px-5 py-2 font-medium">Step</th>
+                        <th className="px-5 py-2 font-medium">Action</th>
+                        <th className="px-5 py-2 text-right font-medium">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {(route.turn_by_turn_manifest ?? []).map((step) => (
+                        <tr key={step.step}>
+                          <td className="mono px-5 py-2.5 text-xs text-ink-faint">{step.step}</td>
+                          <td className="px-5 py-2.5">
+                            <p className="text-xs text-ink">{step.action}</p>
+                            <p className="mono text-[11px] text-ink-faint">
+                              {step.from} → {step.to}
+                            </p>
+                          </td>
+                          <td className="mono px-5 py-2.5 text-right text-xs text-ink-muted">{step.time_sec}s</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Panel>
+
+                <Panel title="Dispatch detail">
+                  <dl className="space-y-2.5 text-xs">
+                    {[
+                      ["Exam", route.exam_id],
+                      ["Course", route.course_code],
+                      ["Destination", route.destination_room],
+                      ["Target floor", String(route.target_floor)],
+                      ["Package", `${order?.package_weight_kg ?? "—"} kg`],
+                      ["Transport", order?.transport_mode ?? "—"],
+                      ["Step-free verified", String(route.step_free_verified)],
+                      ["Time limit", `${order?.max_allowed_transit_seconds ?? "—"}s allowed`],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex justify-between gap-3">
+                        <dt className="text-ink-muted">{label}</dt>
+                        <dd className="mono truncate font-medium text-ink">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </Panel>
+              </div>
+
+              <MetricsBar metrics={run.data?.metrics ?? routingMetrics} source={run.source} />
+
+              <JsonPreview
+                fileName="output_delivery_routes.json"
+                payload={{ generation_timestamp: "2026-08-18T14:30:00Z", status: "OPTIMAL", total_dispatches: routes.length, successful_routes: routes.length, failed_routes: 0, routes }}
+              />
+            </>
+          ) : (
+            <Panel title="Output" subtitle="output_delivery_routes.json">
+              <EmptyState
+                title="No routes computed yet"
+                description="Run the router to expand the building graph with A* and produce a step-free verified delivery path per dispatch."
+              />
+            </Panel>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

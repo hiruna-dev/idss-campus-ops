@@ -1,5 +1,10 @@
 package com.idss.task2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+// Task 5's persisted schedule entries carry a Mongo-generated "id" field this model
+// doesn't need — ignore unknown fields rather than fail deserialization on it.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MasterScheduleEntry {
     public String exam_id;
     public String course_code;

@@ -1,0 +1,67 @@
+export const modules = [
+  {
+    id: "task3",
+    taskNumber: 3,
+    path: "/task3",
+    name: "Clash Detection",
+    shortName: "Clash Detection",
+    algorithm: "DSATUR Graph Colouring",
+    endpoint: "POST /api/task3/detect",
+    consumes: ["input_student_enrollments.json", "input_exams.json"],
+    produces: ["output_conflict_graph.json", "output_clash_analysis.json"],
+    pipelineOrder: 1,
+  },
+  {
+    id: "task4",
+    taskNumber: 4,
+    path: "/task4",
+    name: "Room Ranking",
+    shortName: "Room Ranking",
+    algorithm: "AHP + TOPSIS",
+    endpoint: "POST /api/task4/rank",
+    consumes: ["input_room_master.json", "input_exam_requests.json"],
+    produces: ["output_room_rankings.json", "output_room_reference.json"],
+    pipelineOrder: 1,
+  },
+  {
+    id: "task5",
+    taskNumber: 5,
+    path: "/task5",
+    name: "Timetable Generator",
+    shortName: "Timetable",
+    algorithm: "Genetic Algorithm (Hybrid + Hill Climbing)",
+    endpoint: "POST /api/task5/generate",
+    consumes: ["output_conflict_graph.json", "output_room_rankings.json", "input_timeslots.json"],
+    produces: ["output_master_schedule.json", "output_timetable_metrics.json"],
+    pipelineOrder: 2,
+  },
+  {
+    id: "task2",
+    taskNumber: 2,
+    path: "/task2",
+    name: "Invigilator Assignment",
+    shortName: "Invigilators",
+    algorithm: "Hungarian (Kuhn-Munkres)",
+    endpoint: "POST /api/task2/assign",
+    consumes: ["input_master_schedule.json", "input_invigilators.json"],
+    produces: ["output_proctor_roster.json", "output_roster_metrics.json"],
+    pipelineOrder: 3,
+  },
+  {
+    id: "task1",
+    taskNumber: 1,
+    path: "/task1",
+    name: "Route Optimizer",
+    shortName: "Paper Routing",
+    algorithm: "A* Search (3D heuristic)",
+    endpoint: "POST /api/task1/route",
+    consumes: ["input_building_graph.json", "input_dispatch_orders.json"],
+    produces: ["output_delivery_routes.json", "output_routing_metrics.json"],
+    pipelineOrder: 4,
+  },
+];
+
+export const moduleById = (id) => modules.find((m) => m.id === id);
+
+/** Nav order follows the execution pipeline: 3 + 4 → 5 → 2 → 1. */
+export const navModules = modules;

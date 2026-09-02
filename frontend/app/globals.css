@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @import "tailwindcss";
 
 @import "tw-animate-css";
@@ -39,6 +41,23 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* IDSS design system (ported from Magic Patterns) */
+  --color-primary-dark: var(--idss-primary-dark);
+  --color-primary-soft: var(--idss-primary-soft);
+  --color-accent-soft: var(--idss-accent-soft);
+  --color-canvas: var(--idss-canvas);
+  --color-ink: var(--idss-ink);
+  --color-ink-muted: var(--idss-ink-muted);
+  --color-ink-faint: var(--idss-ink-faint);
+  --color-line: var(--idss-line);
+  --color-success: var(--idss-success);
+  --color-success-soft: var(--idss-success-soft);
+  --color-warning: var(--idss-warning);
+  --color-warning-soft: var(--idss-warning-soft);
+  --color-danger: var(--idss-danger);
+  --color-danger-soft: var(--idss-danger-soft);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -53,26 +72,41 @@
   --popover: #ffffff;
   --popover-foreground: #09090b;
   
-  /* Nano Banana Vibrant Yellow Primary */
-  --primary: #facc15; 
-  --primary-foreground: #09090b;
-  
+  /* IDSS primary — navy blue */
+  --primary: #0f4c75;
+  --primary-foreground: #ffffff;
+  --idss-primary-dark: #0b3a5a;
+  --idss-primary-soft: #e7eef4;
+
   /* Dark grey secondary for contrast */
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
-  
+
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
-  
-  /* Banana yellow accent */
-  --accent: #fef08a;
-  --accent-foreground: #18181b;
-  
+
+  /* IDSS accent — sky blue */
+  --accent: #3282b8;
+  --accent-foreground: #ffffff;
+  --idss-accent-soft: #e3f0f8;
+
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
   --border: #e4e4e7;
   --input: #e4e4e7;
-  --ring: #facc15;
+  --ring: #0f4c75;
+
+  --idss-canvas: #f5f7fa;
+  --idss-ink: #1b262c;
+  --idss-ink-muted: #5b6b75;
+  --idss-ink-faint: #8a98a2;
+  --idss-line: #dce3ea;
+  --idss-success: #2e7d32;
+  --idss-success-soft: #e7f2e8;
+  --idss-warning: #ef6c00;
+  --idss-warning-soft: #fdf0e3;
+  --idss-danger: #b3261e;
+  --idss-danger-soft: #fae9e8;
   --chart-1: #eab308;
   --chart-2: #27272a;
   --chart-3: #18181b;
@@ -129,6 +163,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-canvas text-ink;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
 }

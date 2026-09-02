@@ -42,6 +42,16 @@ public class AssignmentController {
         this.assignmentService = assignmentService;
     }
 
+    //returns the seed invigilator list (read-only; used by the frontend dashboard for live counts)
+    @GetMapping("/invigilators")
+    public ResponseEntity<List<Invigilator>> getInvigilators() {
+        try {
+            return ResponseEntity.ok(JsonLoader.loadList(invigilatorsPath, Invigilator.class));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     //assigns invigilators to exams in the given master schedule
     //loads invigilators from json, runs the hungarian algo via service, writes output files
     @PostMapping("/assign")

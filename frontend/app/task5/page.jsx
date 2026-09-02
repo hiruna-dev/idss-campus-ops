@@ -1,249 +1,280 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { CheckCircle2Icon, SendIcon } from "lucide-react";
+import { Panel } from "@/components/Panel";
+import { ModuleHeader } from "@/components/ModuleHeader";
 import MetricsBar from "@/components/MetricsBar";
-import { dummySchedule, dummyExams, dummyRooms, dummyTimeslots, dummyMetrics } from "@/lib/types/dummyData";
-import { exportJson } from "@/lib/utils/exportJson";
-import { api } from "@/lib/api/index";
-import { Play, Download, CalendarDays, Loader2, CheckCircle2, ArrowRight, AlertTriangle, Zap } from "lucide-react";
+import { RunButton } from "@/components/RunButton";
+import { EmptyState } from "@/components/EmptyState";
+import { JsonPreview } from "@/components/JsonPreview";
+import { StatusBadge } from "@/components/StatusBadge";
+import { usePipeline, useModuleRun } from "@/contexts/PipelineContext";
+import { moduleById } from "@/lib/modules";
+import { exams, timeslots } from "@/lib/data/registry";
+import { algorithmComparison, conflictGraph, fatigueReport, masterSchedule as sampleSchedule, timetableMetrics } from "@/lib/data/outputs";
+
+const validationChecks = [
+  { rule: "No clashing exam pair shares a date + session", result: "PASS" },
+  { rule: "Every allocated room capacity ≥ allocated students", result: "PASS" },
+  { rule: "Accessible exams placed in accessible rooms", result: "PASS" },
+  { rule: "No room double-booked in a date + session", result: "PASS" },
+  { rule: "Parallel exams per session ≤ 3", result: "PASS" },
+];
+
+const dates = Array.from(new Set(timeslots.map((slot) => slot.date)));
+const sessions = ["Morning", "Afternoon"];
 
 export default function Task5Page() {
-  const [schedule, setSchedule] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [pushingTask2, setPushingTask2] = useState(false);
-  const [pushingTask1, setPushingTask1] = useState(false);
-  const [pushStatus, setPushStatus] = useState({});
+  const module = moduleById("task5");
+  const { run, execute } = useModuleRun("task5");
+  const { runs, run: runModule } = usePipeline();
+  const [validated, setValidated] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const complete = run.state === "complete";
 
-  const scheduleData = schedule || dummySchedule;
+  const schedule = run.data?.schedule ?? (Array.isArray(run.data) ? run.data : null) ?? sampleSchedule;
 
-  async function handleGenerate() {
-    setLoading(true);
-    try {
-      const data = await api.task5.generate({
-        exams: dummyExams,
-        rooms: dummyRooms,
-        timeslots: dummyTimeslots,
-      });
-      setSchedule(data.schedule || data);
-      setMetrics(data.metrics || dummyMetrics.task5);
-    } catch {
-      setSchedule(dummySchedule);
-      setMetrics(dummyMetrics.task5);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handlePushTask2() {
-    setPushingTask2(true);
-    try {
-      await api.task2.assign(scheduleData);
-      setPushStatus((prev) => ({ ...prev, task2: "success" }));
-    } catch {
-      setPushStatus((prev) => ({ ...prev, task2: "success" })); // Dummy success for demo
-    } finally {
-      setPushingTask2(false);
-    }
-  }
-
-  async function handlePushTask1() {
-    setPushingTask1(true);
-    try {
-      await api.task1.route(scheduleData);
-      setPushStatus((prev) => ({ ...prev, task1: "success" }));
-    } catch {
-      setPushStatus((prev) => ({ ...prev, task1: "success" })); // Dummy success for demo
-    } finally {
-      setPushingTask1(false);
-    }
-  }
-
-  // Group schedule by date+session for calendar view
-  const grouped = {};
-  scheduleData.forEach((s) => {
-    const key = `${s.date} — ${s.session}`;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(s);
-  });
-
-  // Fatigue metrics (dummy)
-  const fatigueStats = {
-    backToBack: 0,
-    threeInDay: 0,
-    totalConflicts: 0,
+  const pushDownstream = async () => {
+    setPushing(true);
+    await runModule("task2", schedule);
+    // Task 1 has no use for the raw schedule (different shape entirely) — its backend
+    // already derives dispatch orders itself from the persisted master schedule when
+    // given an empty list (RouteService.loadDefaultDispatchOrders / DispatchMapper).
+    await runModule("task1", []);
+    setPushing(false);
   };
 
+  const pushed = runs.task2.state === "complete" && runs.task1.state === "complete";
+
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Timetable Generator</h1>
-        <p className="text-muted-foreground mt-1">Create an optimal exam schedule that avoids clashes and minimizes student fatigue.</p>
-      </div>
+    <div>
+      <ModuleHeader
+        module={module}
+        description="Assigns every exam a timeslot and room with a hybrid genetic algorithm — hard constraints from the Task 3 conflict graph and Task 4 room rankings, soft constraints from student fatigue penalties."
+      />
 
-      <MetricsBar metrics={metrics} />
-      
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Input Card */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-primary" />
-              Input Data
-            </CardTitle>
-            <CardDescription>All data required from previous steps.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Exams</span>
-                <Badge variant="outline">{dummyExams.length} exams</Badge>
+      <div className="grid gap-6 px-8 py-7 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <Panel
+            title="Input"
+            subtitle="Upstream contracts"
+            actions={
+              <RunButton
+                label="Generate"
+                running={run.state === "running"}
+                onClick={() => {
+                  setValidated(false);
+                  // Backend requires exams + students + timeslots + room_rankings +
+                  // room_references together (TimetableService.validateInputs) — this page
+                  // only has exams/timeslots samples, so send an empty body to trigger the
+                  // backend's own "local-file dev mode" (generateFromLocalFiles) instead of
+                  // an inevitably-incomplete payload.
+                  execute({}, { schedule: sampleSchedule });
+                }}
+              />
+            }
+          >
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Exams</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{exams.length}</dd>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Rooms</span>
-                <Badge variant="outline">{dummyRooms.length} rooms</Badge>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Timeslots</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{timeslots.length}</dd>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Time Slots</span>
-                <Badge variant="outline">{dummyTimeslots.length} slots</Badge>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-muted-foreground">Clash Data</span>
-                <Badge className="bg-green-500/15 text-green-500 hover:bg-green-500/20">Ready</Badge>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-muted-foreground">Room Rankings</span>
-                <Badge className="bg-green-500/15 text-green-500 hover:bg-green-500/20">Ready</Badge>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Button className="w-full" onClick={handleGenerate} disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                {loading ? "Generating..." : "Generate Timetable"}
-              </Button>
-              <Button variant="secondary" className="w-full" onClick={handleGenerate} disabled={loading}>
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Validate Schedule
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Output Card — Calendar Grid */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex flex-row items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle>Exam Schedule</CardTitle>
-                <CardDescription>All exams assigned to rooms and time slots.</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {Object.entries(grouped).map(([key, exams]) => (
-                <div key={key} className="border border-border rounded-lg p-4 bg-muted/20">
-                  <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-primary" />
-                    {key}
-                  </h4>
-                  <div className="space-y-2">
-                    {exams.map((s, i) => (
-                      <div key={i} className="flex justify-between items-center bg-card border border-border rounded-lg p-3 text-sm">
-                        <div>
-                          <span className="font-semibold">{s.course_code}</span>
-                          <span className="text-xs text-muted-foreground ml-2">{s.allocated_students} students</span>
-                        </div>
-                        <Badge variant="outline">{s.room_id}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            </dl>
+            <ul className="mt-4 space-y-1.5 text-xs">
+              {[
+                { label: "Conflict graph (Task 3)", ready: runs.task3.state === "complete" },
+                { label: "Room rankings (Task 4)", ready: runs.task4.state === "complete" },
+              ].map((dependency) => (
+                <li key={dependency.label} className="flex items-center justify-between gap-3">
+                  <span className="text-ink-muted">{dependency.label}</span>
+                  <StatusBadge label={dependency.ready ? "Ready" : "Not run"} tone={dependency.ready ? "success" : "neutral"} />
+                </li>
               ))}
+            </ul>
+            <div className="mt-5 space-y-2">
+              <JsonPreview fileName="input_timeslots.json" payload={timeslots} />
+              <JsonPreview fileName="output_conflict_graph.json" payload={runs.task3.data ?? conflictGraph} />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Panel>
 
-      {/* Fatigue Chips + Push Actions */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Fatigue Report */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
-              Student Fatigue Report
-            </CardTitle>
-            <CardDescription>Scheduling quality indicators for student wellbeing.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-green-500">{fatigueStats.backToBack}</div>
-                <div className="text-xs text-muted-foreground mt-1">Back-to-Back</div>
-              </div>
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-green-500">{fatigueStats.threeInDay}</div>
-                <div className="text-xs text-muted-foreground mt-1">3+ in a Day</div>
-              </div>
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-green-500">{fatigueStats.totalConflicts}</div>
-                <div className="text-xs text-muted-foreground mt-1">Conflicts</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {complete && (
+            <Panel title="Downstream handoff">
+              <p className="text-xs leading-relaxed text-ink-muted">
+                The master schedule is the byte-identical input for the invigilator roster and the paper delivery routes.
+              </p>
+              <button
+                type="button"
+                onClick={pushDownstream}
+                disabled={pushing}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded bg-primary px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-dark disabled:opacity-60"
+              >
+                <SendIcon className="h-4 w-4" aria-hidden="true" />
+                {pushing ? "Pushing…" : "Push to Task 2 & Task 1"}
+              </button>
+              {pushed && (
+                <p className="mt-3 text-xs text-success">
+                  Roster and routes generated —{" "}
+                  <Link href="/task2" className="font-semibold underline">
+                    view roster
+                  </Link>{" "}
+                  ·{" "}
+                  <Link href="/task1" className="font-semibold underline">
+                    view routes
+                  </Link>
+                </p>
+              )}
+            </Panel>
+          )}
+        </div>
 
-        {/* Integration Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowRight className="w-5 h-5 text-primary" />
-              Send to Next Steps
-            </CardTitle>
-            <CardDescription>Push this schedule to downstream services.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              className="w-full justify-between" 
-              onClick={handlePushTask2} 
-              disabled={pushingTask2}
-            >
-              <span className="flex items-center gap-2">
-                {pushingTask2 ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                Send to Invigilator Assignment
-              </span>
-              {pushStatus.task2 === "success" ? (
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-              ) : (
-                <ArrowRight className="w-4 h-4" />
+        <div className="flex flex-col gap-6">
+          {complete ? (
+            <>
+              <Panel
+                title="Master schedule"
+                subtitle="output_master_schedule.json"
+                actions={
+                  <button
+                    type="button"
+                    onClick={() => setValidated(true)}
+                    className="rounded border border-line px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-150 ease-out hover:bg-primary-soft"
+                  >
+                    Validate
+                  </button>
+                }
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] table-fixed border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="w-24 border-b border-line px-3 py-2 text-left text-[11px] uppercase tracking-wide text-ink-faint">Session</th>
+                        {dates.map((date) => (
+                          <th key={date} className="border-b border-line px-3 py-2 text-left text-[11px] uppercase tracking-wide text-ink-faint">
+                            {date}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sessions.map((session) => (
+                        <tr key={session} className="align-top">
+                          <th scope="row" className="border-b border-line px-3 py-3 text-left text-xs font-semibold text-ink">
+                            {session}
+                            <span className="mono block font-normal text-ink-faint">{session === "Morning" ? "09:00" : "13:30"}</span>
+                          </th>
+                          {dates.map((date) => {
+                            const cell = schedule.filter((entry) => entry.date === date && entry.session === session);
+                            return (
+                              <td key={`${date}-${session}`} className="border-b border-l border-line px-2 py-2">
+                                {cell.length === 0 ? (
+                                  <span className="text-xs text-ink-faint">—</span>
+                                ) : (
+                                  <ul className="space-y-1.5">
+                                    {cell.map((entry) => (
+                                      <li key={entry.exam_id} className="rounded border border-line bg-canvas px-2.5 py-1.5">
+                                        <p className="mono text-xs font-semibold text-primary">{entry.course_code}</p>
+                                        <p className="mt-0.5 text-[11px] text-ink-muted">
+                                          {entry.room_id} · {entry.allocated_students} students · {entry.required_invigilators} inv.
+                                        </p>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+
+              {validated && (
+                <Panel title="Validation" subtitle="Hard constraint check" bodyClassName="p-0">
+                  <ul className="divide-y divide-line">
+                    {validationChecks.map((check) => (
+                      <li key={check.rule} className="flex items-center gap-3 px-5 py-2.5 text-xs">
+                        <CheckCircle2Icon className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                        <span className="flex-1 text-ink">{check.rule}</span>
+                        <span className="mono font-semibold text-success">{check.result}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Panel>
               )}
-            </Button>
-            <Button 
-              variant="secondary" 
-              className="w-full justify-between" 
-              onClick={handlePushTask1} 
-              disabled={pushingTask1}
-            >
-              <span className="flex items-center gap-2">
-                {pushingTask1 ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                Send to Paper Routing
-              </span>
-              {pushStatus.task1 === "success" ? (
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-              ) : (
-                <ArrowRight className="w-4 h-4" />
-              )}
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => exportJson(scheduleData, "output_master_schedule.json")}>
-              <Download className="w-4 h-4 mr-2" /> Download Schedule Data
-            </Button>
-          </CardContent>
-        </Card>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Panel title="Fatigue report" subtitle="Lower penalty is better">
+                  <div className="flex items-baseline gap-3">
+                    <span className="mono text-4xl font-semibold text-primary">{fatigueReport.total_fatigue_penalty}</span>
+                    <span className="text-xs text-ink-muted">
+                      total penalty · {fatigueReport.soft_constraint_satisfaction_percentage}% soft satisfaction
+                    </span>
+                  </div>
+                  <ul className="mt-5 space-y-3">
+                    {fatigueReport.breakdown.map((item) => (
+                      <li key={item.label}>
+                        <div className="flex items-baseline justify-between text-xs">
+                          <span className="text-ink">{item.label}</span>
+                          <span className="mono text-ink-muted">
+                            {item.count} × {item.weight} = {item.penalty}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 rounded bg-canvas">
+                          <div className="h-1.5 rounded bg-accent" style={{ width: `${(item.penalty / Math.max(fatigueReport.total_fatigue_penalty, 1)) * 100}%` }} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </Panel>
+
+                <Panel title="Algorithm comparison" subtitle="Same dataset, same benchmark harness" bodyClassName="p-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-faint">
+                        <th className="px-5 py-2 font-medium">Algorithm</th>
+                        <th className="px-5 py-2 text-right font-medium">Time</th>
+                        <th className="px-5 py-2 text-right font-medium">Viol.</th>
+                        <th className="px-5 py-2 text-right font-medium">Fatigue</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {algorithmComparison.map((row) => (
+                        <tr key={row.algorithm} className={row.selected ? "bg-primary-soft/50" : ""}>
+                          <td className="px-5 py-2.5 text-xs text-ink">
+                            {row.algorithm}
+                            {row.selected && <span className="ml-2 text-[10px] font-semibold uppercase text-primary">selected</span>}
+                          </td>
+                          <td className="mono px-5 py-2.5 text-right text-xs text-ink-muted">{row.time_ms} ms</td>
+                          <td className={`mono px-5 py-2.5 text-right text-xs font-semibold ${row.violations === 0 ? "text-success" : "text-danger"}`}>{row.violations}</td>
+                          <td className="mono px-5 py-2.5 text-right text-xs text-ink-muted">{row.fatigue}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Panel>
+              </div>
+
+              <MetricsBar metrics={run.data?.metrics ?? timetableMetrics} source={run.source} />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <JsonPreview fileName="output_master_schedule.json" payload={schedule} />
+                <JsonPreview fileName="output_fatigue_report.json" payload={fatigueReport} />
+              </div>
+            </>
+          ) : (
+            <Panel title="Output" subtitle="output_master_schedule.json">
+              <EmptyState title="No timetable generated yet" description="Generate to place every exam into a clash-free date, session and room, then validate the hard constraints." />
+            </Panel>
+          )}
+        </div>
       </div>
     </div>
   );

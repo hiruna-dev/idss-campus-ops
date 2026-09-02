@@ -65,9 +65,13 @@ public class ClashAnalysisService {
 
         String status = task3Service.determineStatus(sessionsUsed, lowerBound, violations, isExact);
 
-        // Update VertexResult objects in graph
+        // Update VertexResult objects in graph. colorMap is keyed by course_code
+        // (DsaturColorer keys off ConflictGraph.getExamRegistry(), which
+        // ConflictGraphBuilder populates from exam.course_code, not exam_id) —
+        // looking it up by exam_id always missed, leaving every vertex's
+        // color/sessionIndex at their default 0 and every session group empty.
         for (VertexResult vr : graph.getVertices()) {
-            Integer c = colorMap.get(vr.getExamId());
+            Integer c = colorMap.get(vr.getCourseCode());
             if (c != null) {
                 vr.setColor(c);
                 vr.setSessionIndex(c);

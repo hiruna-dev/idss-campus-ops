@@ -3,6 +3,7 @@ package com.idss.task1.controller;
 import com.idss.common.util.JsonLoader;
 import com.idss.task1.model.DeliveryRoute;
 import com.idss.task1.model.DispatchOrder;
+import com.idss.task1.model.Node3D;
 import com.idss.task1.model.RoutingMetrics;
 import com.idss.task1.repository.DeliveryRouteRepository;
 import com.idss.task1.service.RouteService;
@@ -31,13 +32,44 @@ public class RouteController {
     private final RouteService routeService;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final String outputMetricsPath;
+    private final String dispatchOrdersPath;
+    private final String buildingGraphPath;
 
     public RouteController(RouteService routeService,
                             DeliveryRouteRepository deliveryRouteRepository,
-                            @Value("${idss.task1.output-metrics-path:data/shared/output_routing_metrics.json}") String outputMetricsPath) {
+                            @Value("${idss.task1.output-metrics-path:data/shared/output_routing_metrics.json}") String outputMetricsPath,
+                            @Value("${idss.task1.dispatch-orders-path:data/input/input_dispatch_orders.json}") String dispatchOrdersPath,
+                            @Value("${idss.task1.building-graph-path:data/input/input_building_graph.json}") String buildingGraphPath) {
         this.routeService = routeService;
         this.deliveryRouteRepository = deliveryRouteRepository;
         this.outputMetricsPath = outputMetricsPath;
+        this.dispatchOrdersPath = dispatchOrdersPath;
+        this.buildingGraphPath = buildingGraphPath;
+    }
+
+    /**
+     * Returns the seed dispatch order list (read-only; used by the frontend
+     * dashboard for live counts instead of hardcoded sample data).
+     */
+    @GetMapping("/dispatch-orders")
+    public ResponseEntity<List<DispatchOrder>> getDispatchOrders() {
+        try {
+            return ResponseEntity.ok(JsonLoader.loadList(dispatchOrdersPath, DispatchOrder.class));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Returns the seed building graph node list (read-only).
+     */
+    @GetMapping("/building-graph")
+    public ResponseEntity<List<Node3D>> getBuildingGraph() {
+        try {
+            return ResponseEntity.ok(JsonLoader.loadList(buildingGraphPath, Node3D.class));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**

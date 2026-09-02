@@ -30,6 +30,37 @@ public class ClashController {
         this.clashAnalysisService = clashAnalysisService;
     }
 
+    /**
+     * Returns the seed exam list (read-only; used by the frontend dashboard for
+     * live counts instead of hardcoded sample data).
+     */
+    @GetMapping("/exams")
+    public ResponseEntity<List<Exam>> getExams() {
+        try {
+            return ResponseEntity.ok(JsonLoader.loadList(examsPath, Exam.class));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Returns the seed student enrollment list (read-only).
+     */
+    @GetMapping("/enrollments")
+    public ResponseEntity<List<StudentEnrollment>> getEnrollments() {
+        try {
+            return ResponseEntity.ok(JsonLoader.loadList(enrollmentsPath, StudentEnrollment.class));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /** Service health check (master_context_file.md Section 10). */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of("status", "UP", "service", "task3-clash-detection"));
+    }
+
     @PostMapping("/detect")
     public ResponseEntity<?> detectClashes(
             @RequestBody(required = false) List<StudentEnrollment> enrollments,

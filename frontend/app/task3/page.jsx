@@ -1,195 +1,223 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { Panel } from "@/components/Panel";
+import { ModuleHeader } from "@/components/ModuleHeader";
 import MetricsBar from "@/components/MetricsBar";
-import { dummyConflictGraph, dummyExams, dummyMetrics } from "@/lib/types/dummyData";
-import { exportJson } from "@/lib/utils/exportJson";
+import { RunButton } from "@/components/RunButton";
+import { EmptyState } from "@/components/EmptyState";
+import { JsonPreview } from "@/components/JsonPreview";
+import { StatusBadge } from "@/components/StatusBadge";
+import { useModuleRun } from "@/contexts/PipelineContext";
+import { moduleById } from "@/lib/modules";
+import { exams as sampleExams, studentEnrollments as sampleStudentEnrollments, totalStudents } from "@/lib/data/registry";
+import { clashAnalysis as sampleClashAnalysis, clashMetrics, conflictGraph as sampleConflictGraph } from "@/lib/data/outputs";
 import { api } from "@/lib/api/index";
-import { Play, Download, GitBranch, Loader2, Users, Layers } from "lucide-react";
 
-// Position nodes in a circle for the conflict graph
-function getNodePositions(vertices) {
-  const cx = 200, cy = 110, radius = 75;
-  return vertices.map((v, i) => {
-    const angle = (2 * Math.PI * i) / vertices.length - Math.PI / 2;
-    return { id: v, x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
-  });
+const sessionColors = ["#0F4C75", "#3282B8", "#EF6C00", "#2E7D32"];
+
+function ConflictGraphCanvas({ graph, selected, onSelect }) {
+  const width = 620;
+  const height = 380;
+  const radius = 138;
+  const centre = { x: width / 2, y: height / 2 };
+
+  const positions = new Map(
+    graph.vertices.map((vertex, index) => {
+      const angle = (index / graph.vertices.length) * Math.PI * 2 - Math.PI / 2;
+      return [vertex.exam_id, { x: centre.x + radius * Math.cos(angle), y: centre.y + radius * Math.sin(angle) }];
+    })
+  );
+
+  const isDimmed = (examId) =>
+    selected !== null &&
+    selected !== examId &&
+    !graph.edges.some((edge) => (edge.exam_a === selected && edge.exam_b === examId) || (edge.exam_b === selected && edge.exam_a === examId));
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Exam conflict graph: vertices are exams, edges are shared students">
+      {graph.edges.map((edge) => {
+        const a = positions.get(edge.exam_a);
+        const b = positions.get(edge.exam_b);
+        if (!a || !b) return null;
+        const active = selected === null || edge.exam_a === selected || edge.exam_b === selected;
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        return (
+          <g key={`${edge.exam_a}-${edge.exam_b}`} opacity={active ? 1 : 0.15}>
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={selected && active ? "#3282B8" : "#B7C4CE"} strokeWidth={1 + edge.shared_students / 8} />
+            {selected && active && (
+              <text x={mid.x} y={mid.y - 4} textAnchor="middle" className="mono" fontSize="10" fill="#0F4C75">
+                {edge.shared_students}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
+      {graph.vertices.map((vertex) => {
+        const position = positions.get(vertex.exam_id);
+        if (!position) return null;
+        const dimmed = isDimmed(vertex.exam_id);
+        return (
+          <g key={vertex.exam_id} opacity={dimmed ? 0.25 : 1} onMouseEnter={() => onSelect(vertex.exam_id)} onMouseLeave={() => onSelect(null)} className="cursor-pointer">
+            <circle cx={position.x} cy={position.y} r={22} fill={sessionColors[vertex.session_index % sessionColors.length]} stroke="#FFFFFF" strokeWidth={selected === vertex.exam_id ? 3 : 2} />
+            <text x={position.x} y={position.y + 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#FFFFFF">
+              {vertex.degree}
+            </text>
+            <text x={position.x} y={position.y + 38} textAnchor="middle" className="mono" fontSize="11" fill="#1B262C">
+              {vertex.course_code}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
 }
 
 export default function Task3Page() {
-  const [result, setResult] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const module = moduleById("task3");
+  const { run, execute } = useModuleRun("task3");
+  const [selected, setSelected] = useState(null);
+  const [liveExams, setLiveExams] = useState(null);
+  const [liveEnrollments, setLiveEnrollments] = useState(null);
+  const complete = run.state === "complete";
 
-  async function handleRun() {
-    setLoading(true);
-    try {
-      const data = await api.task3.detect(dummyExams);
-      setResult(data);
-      setMetrics(data.metrics || dummyMetrics.task3);
-    } catch {
-      setResult(dummyConflictGraph);
-      setMetrics(dummyMetrics.task3);
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([api.task3.getExams(), api.task3.getEnrollments()]).then(([examsResult, enrollmentsResult]) => {
+      if (cancelled) return;
+      if (examsResult.status === "fulfilled") setLiveExams(examsResult.value);
+      if (enrollmentsResult.status === "fulfilled") setLiveEnrollments(enrollmentsResult.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const graphData = result || dummyConflictGraph;
-  const nodePositions = getNodePositions(graphData.vertices);
-  const examLookup = Object.fromEntries(dummyExams.map(e => [e.exam_id, e.course_code]));
+  const exams = liveExams ?? sampleExams;
+  const studentEnrollments = liveEnrollments ?? sampleStudentEnrollments;
+  const enrollmentCount = liveEnrollments?.length ?? totalStudents;
 
-  // Color palette for session groups
-  const sessionColors = [
-    { bg: "bg-blue-500/15", text: "text-blue-400", stroke: "#60a5fa" },
-    { bg: "bg-emerald-500/15", text: "text-emerald-400", stroke: "#34d399" },
-    { bg: "bg-amber-500/15", text: "text-amber-400", stroke: "#fbbf24" },
-    { bg: "bg-purple-500/15", text: "text-purple-400", stroke: "#a78bfa" },
-  ];
+  const graph = run.data?.conflict_graph ?? run.data ?? sampleConflictGraph;
+  const analysis = run.data?.clash_analysis ?? sampleClashAnalysis;
+  // The live API returns session_groups as string[][] (course codes) and clash_pairs as
+  // an array of edge objects; the sample fixture uses {session_index, exams} objects and
+  // a plain count. Normalize both shapes here rather than assuming one.
+  const sessionGroups = (analysis.session_groups ?? []).map((group, index) =>
+    Array.isArray(group) ? { session_index: index, exams: group } : group
+  );
+  const clashPairsCount = Array.isArray(analysis.clash_pairs) ? analysis.clash_pairs.length : analysis.clash_pairs;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Clash Detection</h1>
-        <p className="text-muted-foreground mt-1">Identify scheduling conflicts where students are enrolled in multiple exams at the same time.</p>
-      </div>
+    <div>
+      <ModuleHeader
+        module={module}
+        description="Builds an exam conflict graph from student enrolments — an edge exists whenever two exams share at least one student — then colours it with DSATUR to find the minimum number of clash-free sessions."
+      />
 
-      <MetricsBar metrics={metrics} />
-      
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Input Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Student Enrollments
-            </CardTitle>
-            <CardDescription>Exams and how many students are enrolled in each.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              {dummyExams.map((exam) => (
-                <div key={exam.exam_id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{exam.exam_id}</Badge>
-                    <span className="font-medium text-sm">{exam.course_code}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{exam.student_count} students</span>
-                </div>
-              ))}
-            </div>
-            <Button className="w-full" onClick={handleRun} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-              {loading ? "Detecting Clashes..." : "Detect Clashes"}
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Output Card — Conflict Graph */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-row items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <GitBranch className="w-5 h-5 text-primary" />
-                  Conflict Map
-                </CardTitle>
-                <CardDescription>Lines connect exams that share students — they cannot run at the same time.</CardDescription>
+      <div className="grid gap-6 px-8 py-7 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <Panel
+            title="Input"
+            subtitle="Enrolments and exam registry"
+            actions={
+              <RunButton
+                label="Detect clashes"
+                running={run.state === "running"}
+                onClick={() => execute(studentEnrollments, sampleConflictGraph)}
+              />
+            }
+          >
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Exams</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{exams.length}</dd>
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-xs text-muted-foreground uppercase font-semibold">Min Sessions</span>
-                <span className="text-3xl font-bold text-primary">{graphData.minimum_sessions}</span>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-ink-faint">Enrolments</dt>
+                <dd className="mono mt-1 text-xl font-semibold text-ink">{enrollmentCount}</dd>
               </div>
+            </dl>
+            <div className="mt-5 space-y-2">
+              <JsonPreview fileName="input_student_enrollments.json" payload={studentEnrollments} />
+              <JsonPreview fileName="input_exams.json" payload={exams} />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video bg-card border border-border rounded-lg relative flex items-center justify-center p-4">
-              <svg width="100%" height="100%" viewBox="0 0 400 220" className="select-none">
-                {/* Edges */}
-                {graphData.edges.map(([from, to], i) => {
-                  const a = nodePositions.find(n => n.id === from);
-                  const b = nodePositions.find(n => n.id === to);
-                  if (!a || !b) return null;
-                  return (
-                    <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                      stroke="var(--primary)" strokeWidth="2" opacity="0.6"
-                    />
-                  );
-                })}
+          </Panel>
 
-                {/* Nodes */}
-                {nodePositions.map((node) => (
-                  <g key={node.id}>
-                    <circle cx={node.x} cy={node.y} r={22} fill="var(--primary)" />
-                    <text x={node.x} y={node.y - 3} textAnchor="middle" className="text-[8px] font-bold fill-primary-foreground">
-                      {examLookup[node.id] || node.id}
-                    </text>
-                    <text x={node.x} y={node.y + 8} textAnchor="middle" className="text-[7px] fill-primary-foreground opacity-70">
-                      {node.id}
-                    </text>
-                  </g>
+          {complete && (
+            <Panel title="Clash-free session groups" bodyClassName="p-0">
+              <ul className="divide-y divide-line">
+                {sessionGroups.map((group) => (
+                  <li key={group.session_index} className="flex gap-3 px-5 py-3">
+                    <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: sessionColors[group.session_index % sessionColors.length] }} aria-hidden="true" />
+                    <div>
+                      <p className="text-xs font-semibold text-ink">Session {group.session_index + 1}</p>
+                      <p className="mono mt-1 text-xs text-ink-muted">{group.exams.join(" · ")}</p>
+                    </div>
+                  </li>
                 ))}
-              </svg>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-muted/50 p-3 rounded-lg border border-border flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Graph Density</span>
-                <span className="font-semibold">{graphData.graph_density}</span>
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg border border-border flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Conflict Edges</span>
-                <span className="font-semibold">{graphData.edges.length}</span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t pt-4">
-            <Button variant="outline" className="w-full" onClick={() => exportJson(graphData, "output_conflict_graph.json")}>
-              <Download className="w-4 h-4 mr-2" /> Download Conflict Data
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+              </ul>
+            </Panel>
+          )}
+        </div>
 
-      {/* Session Groups */}
-      {graphData.session_groups && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-primary" />
-              Session Groups
-            </CardTitle>
-            <CardDescription>Exams grouped into non-conflicting sessions. Exams in the same group can run simultaneously.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {graphData.session_groups.map((group, i) => {
-                const color = sessionColors[i % sessionColors.length];
-                return (
-                  <div key={i} className={`rounded-lg border border-border p-4 ${color.bg}`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`text-sm font-semibold ${color.text}`}>Session {group.session}</span>
-                      <Badge variant="outline" className="text-xs">{group.exams.length} exam{group.exams.length !== 1 ? "s" : ""}</Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {group.exams.length > 0 ? group.exams.map((examId) => (
-                        <Badge key={examId} variant="secondary" className="text-xs">
-                          {examLookup[examId] || examId}
-                        </Badge>
-                      )) : (
-                        <span className="text-xs text-muted-foreground italic">No exams in this session</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        <div className="flex flex-col gap-6">
+          {complete ? (
+            <>
+              <Panel
+                title="Conflict graph"
+                subtitle="Node label = degree · colour = assigned session · edge weight = shared students"
+                actions={<StatusBadge label={`Density ${graph.graph_density}`} tone="neutral" />}
+              >
+                <ConflictGraphCanvas graph={graph} selected={selected} onSelect={setSelected} />
+                <p className="mt-2 text-center text-xs text-ink-muted">Hover a vertex to isolate its clash edges.</p>
+              </Panel>
+
+              <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+                <Panel title="Minimum sessions">
+                  <p className="mono text-5xl font-semibold text-primary">{analysis.minimum_sessions}</p>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    Bounds: lower {analysis.lower_bound} · upper {analysis.upper_bound}
+                  </p>
+                  <p className="mt-3 text-xs text-ink-muted">{clashPairsCount} clashing exam pairs must never share a date and session.</p>
+                </Panel>
+
+                <Panel title="Clash pairs" bodyClassName="p-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-faint">
+                        <th className="px-5 py-2 font-medium">Exam A</th>
+                        <th className="px-5 py-2 font-medium">Exam B</th>
+                        <th className="px-5 py-2 text-right font-medium">Shared students</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {graph.edges.map((edge) => (
+                        <tr key={`${edge.exam_a}-${edge.exam_b}`}>
+                          <td className="mono px-5 py-2 text-ink">{edge.exam_a}</td>
+                          <td className="mono px-5 py-2 text-ink">{edge.exam_b}</td>
+                          <td className="mono px-5 py-2 text-right font-medium text-ink">{edge.shared_students}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Panel>
+              </div>
+
+              <MetricsBar metrics={run.data?.metrics ?? clashMetrics} source={run.source} />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <JsonPreview fileName="output_conflict_graph.json" payload={graph} />
+                <JsonPreview fileName="output_clash_analysis.json" payload={analysis} />
+              </div>
+            </>
+          ) : (
+            <Panel title="Output" subtitle="output_conflict_graph.json">
+              <EmptyState title="No conflict graph yet" description="Run clash detection to build the conflict graph and colour it into clash-free sessions." />
+            </Panel>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

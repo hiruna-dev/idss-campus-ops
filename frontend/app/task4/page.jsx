@@ -1,157 +1,224 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { AccessibilityIcon } from "lucide-react";
+import { Panel } from "@/components/Panel";
+import { ModuleHeader } from "@/components/ModuleHeader";
 import MetricsBar from "@/components/MetricsBar";
-import { dummyRankings, dummyRooms, dummyMetrics } from "@/lib/types/dummyData";
-import { exportJson } from "@/lib/utils/exportJson";
+import { RunButton } from "@/components/RunButton";
+import { EmptyState } from "@/components/EmptyState";
+import { JsonPreview } from "@/components/JsonPreview";
+import { StatusBadge } from "@/components/StatusBadge";
+import { useModuleRun } from "@/contexts/PipelineContext";
+import { moduleById } from "@/lib/modules";
+import { exams, rooms } from "@/lib/data/registry";
+import { roomRankings as sampleRankings, roomRankingMetrics } from "@/lib/data/outputs";
 import { api } from "@/lib/api/index";
-import { Play, Download, Building2, Loader2, CheckCircle2, XCircle, Thermometer, Volume2, Accessibility } from "lucide-react";
+
+// AHP-derived weights (Section 6 of the Task 4 plan) — capacity is a hard filter, not scored.
+const AHP_WEIGHTS = { ac: 0.25, noise: 0.25, accessibility: 0.5 };
+const criteria = [
+  { label: "Accessibility", weight: AHP_WEIGHTS.accessibility },
+  { label: "Noise (1–5, 5 = quietest)", weight: AHP_WEIGHTS.noise },
+  { label: "Air conditioning", weight: AHP_WEIGHTS.ac },
+];
 
 export default function Task4Page() {
-  const [result, setResult] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const module = moduleById("task4");
+  const { run, execute } = useModuleRun("task4");
+  const [examId, setExamId] = useState(exams[0].exam_id);
+  const [liveRoomReference, setLiveRoomReference] = useState(null);
+  const complete = run.state === "complete";
 
-  async function handleRun() {
-    setLoading(true);
-    try {
-      const data = await api.task4.rank({ exam_id: "EX_101", rooms: dummyRooms });
-      setResult(data.rankings || data);
-      setMetrics(data.metrics || dummyMetrics.task4);
-    } catch {
-      setResult(dummyRankings);
-      setMetrics(dummyMetrics.task4);
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    let cancelled = false;
+    api.task4
+      .getRoomReference()
+      .then((data) => {
+        if (!cancelled) setLiveRoomReference(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const rankingData = result || dummyRankings;
+  // The live /room-reference endpoint only exposes room_id/room_name/floor/is_accessible
+  // (Task 4's deliberately-minimal lookup table for Task 1) — no capacity/AC/noise, so the
+  // detailed room table below still needs the full static room master for those attributes.
+  const roomReference = liveRoomReference ?? rooms.map((room) => ({ room_id: room.room_id, room_name: room.room_name, floor: room.floor, is_accessible: room.is_accessible }));
+  const roomCount = liveRoomReference?.length ?? rooms.length;
+
+  const selectedExam = exams.find((item) => item.exam_id === examId) ?? exams[0];
+  const rankings = run.data?.rankings ?? (Array.isArray(run.data) ? run.data : null) ?? sampleRankings;
+  // Pin the displayed exam to whichever one actually produced `rankings`, not the live
+  // dropdown selection — otherwise flipping the selector after a run silently mismatches
+  // the header/utilisation math against stale results (e.g. a room reading >100% capacity).
+  const rankedExamId = complete ? rankings[0]?.exam_id : null;
+  const exam = (rankedExamId && exams.find((item) => item.exam_id === rankedExamId)) || selectedExam;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Room Ranking</h1>
-        <p className="text-muted-foreground mt-1">Score and rank rooms by how suitable they are for each exam — based on capacity, air conditioning, and noise levels.</p>
-      </div>
+    <div>
+      <ModuleHeader
+        module={module}
+        description="Filters rooms on hard constraints (capacity, and step-free access when the exam requires it), then ranks the survivors with TOPSIS using weights derived from an AHP pairwise comparison."
+      />
 
-      <MetricsBar metrics={metrics} />
-      
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Input Card — Room Registry */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" />
-              Available Rooms
-            </CardTitle>
-            <CardDescription>Room features used for scoring.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {dummyRooms.map((room) => (
-                <div key={room.room_id} className="bg-muted/50 rounded-lg border border-border p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">{room.room_id}</span>
-                    <Badge variant="outline">{room.capacity} seats</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Thermometer className="w-3 h-3" />
-                      {room.has_ac ? "Air Conditioned" : "No AC"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Volume2 className="w-3 h-3" />
-                      Quiet: {room.noise_level}/5
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Accessibility className="w-3 h-3" />
-                      {room.is_accessible ? "Accessible" : "Not Accessible"}
-                    </span>
-                  </div>
-                </div>
+      <div className="grid gap-6 px-8 py-7 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <Panel
+            title="Input"
+            subtitle="Exam request + room master"
+            actions={
+              <RunButton
+                label="Rank rooms"
+                running={run.state === "running"}
+                onClick={() =>
+                  execute(
+                    {
+                      exam_id: selectedExam.exam_id,
+                      course_code: selectedExam.course_code,
+                      course_title: selectedExam.course_title,
+                      student_count: selectedExam.student_count,
+                      requires_accessibility: selectedExam.requires_accessibility,
+                    },
+                    sampleRankings
+                  )
+                }
+              />
+            }
+          >
+            <label htmlFor="exam-select" className="text-[11px] uppercase tracking-wide text-ink-faint">
+              Exam request
+            </label>
+            <select
+              id="exam-select"
+              value={examId}
+              onChange={(event) => setExamId(event.target.value)}
+              className="mt-1.5 w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none"
+            >
+              {exams.map((item) => (
+                <option key={item.exam_id} value={item.exam_id}>
+                  {item.course_code} — {item.student_count} students
+                </option>
               ))}
-            </div>
-            <Button className="w-full" onClick={handleRun} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-              {loading ? "Ranking..." : "Rank Rooms for EX_101"}
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Output Card — Rankings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Suitability Rankings</CardTitle>
-            <CardDescription>Rooms ranked by TOPSIS score (closer to 1.0 = better fit).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Rank</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead className="text-right">Meets Requirements</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rankingData.map((ranking, index) => (
-                  <TableRow key={index} className={index === 0 ? "bg-primary/5" : ""}>
-                    <TableCell>
-                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                        index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {ranking.rank}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-medium">{ranking.room_id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm font-semibold">{ranking.score.toFixed(3)}</span>
-                        <div className="h-2 flex-1 max-w-[100px] bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary rounded-full transition-all duration-500" 
-                            style={{ width: `${ranking.score * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {ranking.meets_hard_constraints ? (
-                        <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
-                          <CheckCircle2 className="w-4 h-4" /> Yes
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-red-400 text-xs font-medium">
-                          <XCircle className="w-4 h-4" /> No
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            <div className="mt-4">
-              <p className="text-xs text-muted-foreground mb-2">Criteria Weights (AHP-derived)</p>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="text-xs">Capacity: 50%</Badge>
-                <Badge variant="outline" className="text-xs">Air Conditioning: 30%</Badge>
-                <Badge variant="outline" className="text-xs">Noise Level: 20%</Badge>
+            </select>
+
+            <dl className="mt-4 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <dt className="text-ink-muted">Seats required</dt>
+                <dd className="mono font-medium text-ink">{selectedExam.student_count}</dd>
               </div>
+              <div className="flex justify-between">
+                <dt className="text-ink-muted">Step-free required</dt>
+                <dd className="mono font-medium text-ink">{String(selectedExam.requires_accessibility)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-ink-muted">Rooms in registry</dt>
+                <dd className="mono font-medium text-ink">{roomCount}</dd>
+              </div>
+            </dl>
+
+            <div className="mt-5 space-y-2">
+              <JsonPreview fileName="input_room_master.json" payload={rooms} />
             </div>
-          </CardContent>
-          <CardFooter className="border-t pt-4">
-            <Button variant="outline" className="w-full" onClick={() => exportJson(rankingData, "output_room_rankings.json")}>
-              <Download className="w-4 h-4 mr-2" /> Download Ranking Data
-            </Button>
-          </CardFooter>
-        </Card>
+          </Panel>
+
+          <Panel title="AHP-derived weights" subtitle="Consistency ratio 0.00">
+            <ul className="space-y-3">
+              {criteria.map((criterion) => (
+                <li key={criterion.label}>
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="text-ink">{criterion.label}</span>
+                    <span className="mono font-semibold text-primary">{criterion.weight.toFixed(2)}</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 rounded bg-canvas">
+                    <div className="h-1.5 rounded bg-accent" style={{ width: `${criterion.weight * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+              Capacity is a hard filter, not a scored criterion. Accessibility is scored for every exam and additionally
+              enforced as a filter when the exam requires it.
+            </p>
+          </Panel>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          {complete ? (
+            <>
+              <Panel
+                title={`Ranked rooms — ${exam.course_code}`}
+                subtitle="TOPSIS closeness coefficient (higher is better)"
+                bodyClassName="p-0"
+                actions={exam.requires_accessibility ? <StatusBadge label="Step-free filter active" tone="warning" icon={<AccessibilityIcon className="h-3.5 w-3.5" />} /> : undefined}
+              >
+                {selectedExam.exam_id !== exam.exam_id && (
+                  <p className="border-b border-line bg-warning-soft px-5 py-2 text-xs text-warning">
+                    Showing results for {exam.course_code} — select {selectedExam.course_code} and re-run to rank rooms for it.
+                  </p>
+                )}
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-faint">
+                      <th className="px-5 py-2 font-medium">Rank</th>
+                      <th className="px-5 py-2 font-medium">Room</th>
+                      <th className="px-5 py-2 font-medium">Capacity use</th>
+                      <th className="px-5 py-2 font-medium">Attributes</th>
+                      <th className="px-5 py-2 font-medium">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {rankings.map((ranking) => {
+                      const room = rooms.find((item) => item.room_id === ranking.room_id);
+                      // Live rankings can include rooms the static sample fixture doesn't know
+                      // about (e.g. seeded straight into Mongo) — fall back to the live
+                      // room-reference lookup for name/floor; capacity/AC/noise genuinely
+                      // aren't available there (see roomReference comment above).
+                      const refRoom = !room ? roomReference.find((item) => item.room_id === ranking.room_id) : null;
+                      const utilisation = ranking.capacity_utilisation ?? (room ? Number(((exam.student_count / room.capacity) * 100).toFixed(1)) : null);
+                      return (
+                        <tr key={ranking.room_id} className={ranking.rank === 1 ? "bg-primary-soft/50" : ""}>
+                          <td className="mono px-5 py-3 font-semibold text-primary">{ranking.rank}</td>
+                          <td className="px-5 py-3">
+                            <p className="font-medium text-ink">{room?.room_name ?? refRoom?.room_name ?? ranking.room_id}</p>
+                            <p className="mono text-xs text-ink-muted">
+                              {ranking.room_id} {room ? `· Floor ${room.floor} · ${room.capacity} seats` : refRoom ? `· Floor ${refRoom.floor}` : ""}
+                            </p>
+                          </td>
+                          <td className="mono px-5 py-3 text-ink-muted">{utilisation != null ? `${utilisation}%` : "—"}</td>
+                          <td className="px-5 py-3 text-xs text-ink-muted">
+                            {room ? `${room.has_ac ? "AC" : "No AC"} · Noise ${room.noise_level} · Access ${room.accessibility_score}` : "—"}
+                          </td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-24 rounded bg-canvas">
+                                <div className="h-1.5 rounded bg-primary" style={{ width: `${ranking.score * 100}%` }} />
+                              </div>
+                              <span className="mono text-xs font-semibold text-ink">{ranking.score.toFixed(3)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </Panel>
+
+              <MetricsBar metrics={run.data?.metrics ?? roomRankingMetrics} source={run.source} />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <JsonPreview fileName="output_room_rankings.json" payload={rankings} />
+                <JsonPreview fileName="output_room_reference.json" payload={roomReference} />
+              </div>
+            </>
+          ) : (
+            <Panel title="Output" subtitle="output_room_rankings.json">
+              <EmptyState title="No ranking produced yet" description="Choose an exam request and run the ranker to score every eligible room with AHP-weighted TOPSIS." />
+            </Panel>
+          )}
+        </div>
       </div>
     </div>
   );
