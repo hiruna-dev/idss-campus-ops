@@ -1,0 +1,1017 @@
+[
+  {
+    "node_id": "VAULT_G01",
+    "node_name": "Central Exam Security Vault",
+    "floor": 0,
+    "coordinates": { "x": 10.0, "y": 12.0, "z": 0.0 },
+    "node_type": "VAULT",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_EAST",
+        "distance_meters": 14.5,
+        "base_transit_time_seconds": 12,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 3
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_G_EAST",
+    "node_name": "Ground Floor East Junction",
+    "floor": 0,
+    "coordinates": { "x": 24.5, "y": 12.0, "z": 0.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "VAULT_G01",
+        "distance_meters": 14.5,
+        "base_transit_time_seconds": 12,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_G_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_G_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_G_CENTRAL",
+    "node_name": "Ground Floor Main Lobby & Elevator Bay",
+    "floor": 0,
+    "coordinates": { "x": 32.5, "y": 12.0, "z": 0.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_EAST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_G_WEST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_G",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_G_WEST",
+    "node_name": "Ground Floor West Junction",
+    "floor": 0,
+    "coordinates": { "x": 40.5, "y": 12.0, "z": 0.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_G_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "ELEV_G",
+    "node_name": "Ground Floor Elevator",
+    "floor": 0,
+    "coordinates": { "x": 32.5, "y": 15.0, "z": 0.0 },
+    "node_type": "ELEVATOR",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_CENTRAL",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F1",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F2",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 32,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F3",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 42,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_G_EAST",
+    "node_name": "Ground Floor East Stairwell",
+    "floor": 0,
+    "coordinates": { "x": 24.5, "y": 18.5, "z": 0.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_G_WEST",
+    "node_name": "Ground Floor West Stairwell",
+    "floor": 0,
+    "coordinates": { "x": 40.5, "y": 18.5, "z": 0.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_G_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+
+  {
+    "node_id": "ELEV_F1",
+    "node_name": "First Floor Elevator",
+    "floor": 1,
+    "coordinates": { "x": 32.5, "y": 15.0, "z": 4.0 },
+    "node_type": "ELEVATOR",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_CENTRAL",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_G",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F2",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F3",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 32,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F1_EAST",
+    "node_name": "First Floor East Stairwell",
+    "floor": 1,
+    "coordinates": { "x": 24.5, "y": 18.5, "z": 4.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_G_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F1_WEST",
+    "node_name": "First Floor West Stairwell",
+    "floor": 1,
+    "coordinates": { "x": 40.5, "y": 18.5, "z": 4.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_G_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F1_CENTRAL",
+    "node_name": "First Floor Main Hallway",
+    "floor": 1,
+    "coordinates": { "x": 32.5, "y": 12.0, "z": 4.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "ELEV_F1",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F1_EAST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F1_WEST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R102",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F1_EAST",
+    "node_name": "First Floor East Hallway",
+    "floor": 1,
+    "coordinates": { "x": 24.5, "y": 12.0, "z": 4.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R101",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F1_WEST",
+    "node_name": "First Floor West Hallway",
+    "floor": 1,
+    "coordinates": { "x": 40.5, "y": 12.0, "z": 4.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R103",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R101",
+    "node_name": "Lecture Theatre 101",
+    "floor": 1,
+    "coordinates": { "x": 12.5, "y": 12.0, "z": 4.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_EAST",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R102",
+    "node_name": "Lecture Theatre 102",
+    "floor": 1,
+    "coordinates": { "x": 32.5, "y": 6.0, "z": 4.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_CENTRAL",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R103",
+    "node_name": "Room 103",
+    "floor": 1,
+    "coordinates": { "x": 50.5, "y": 12.0, "z": 4.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F1_WEST",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+
+  {
+    "node_id": "ELEV_F2",
+    "node_name": "Second Floor Elevator",
+    "floor": 2,
+    "coordinates": { "x": 32.5, "y": 15.0, "z": 8.0 },
+    "node_type": "ELEVATOR",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_CENTRAL",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_G",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 32,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F1",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F3",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F2_EAST",
+    "node_name": "Second Floor East Stairwell",
+    "floor": 2,
+    "coordinates": { "x": 24.5, "y": 18.5, "z": 8.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F3_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F2_WEST",
+    "node_name": "Second Floor West Stairwell",
+    "floor": 2,
+    "coordinates": { "x": 40.5, "y": 18.5, "z": 8.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F1_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F3_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 18,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F2_CENTRAL",
+    "node_name": "Second Floor Main Hallway",
+    "floor": 2,
+    "coordinates": { "x": 32.5, "y": 12.0, "z": 8.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "ELEV_F2",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F2_EAST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F2_WEST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R202",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F2_EAST",
+    "node_name": "Second Floor East Hallway",
+    "floor": 2,
+    "coordinates": { "x": 24.5, "y": 12.0, "z": 8.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R201",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F2_WEST",
+    "node_name": "Second Floor West Hallway",
+    "floor": 2,
+    "coordinates": { "x": 40.5, "y": 12.0, "z": 8.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R203",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R201",
+    "node_name": "Lecture Theatre 201",
+    "floor": 2,
+    "coordinates": { "x": 12.5, "y": 12.0, "z": 8.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_EAST",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R202",
+    "node_name": "Seminar Room 202",
+    "floor": 2,
+    "coordinates": { "x": 32.5, "y": 6.0, "z": 8.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_CENTRAL",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": true,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R203",
+    "node_name": "Room 203",
+    "floor": 2,
+    "coordinates": { "x": 50.5, "y": 12.0, "z": 8.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F2_WEST",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+
+  {
+    "node_id": "ELEV_F3",
+    "node_name": "Third Floor Elevator",
+    "floor": 3,
+    "coordinates": { "x": 32.5, "y": 15.0, "z": 12.0 },
+    "node_type": "ELEVATOR",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_CENTRAL",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_G",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 42,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F1",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 32,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ELEV_F2",
+        "distance_meters": 4.0,
+        "base_transit_time_seconds": 22,
+        "edge_type": "ELEVATOR_SHAFT",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F3_EAST",
+    "node_name": "Third Floor East Stairwell",
+    "floor": 3,
+    "coordinates": { "x": 24.5, "y": 18.5, "z": 12.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_EAST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "STAIR_F3_WEST",
+    "node_name": "Third Floor West Stairwell",
+    "floor": 3,
+    "coordinates": { "x": 40.5, "y": 18.5, "z": 12.0 },
+    "node_type": "STAIRS",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F2_WEST",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 14,
+        "edge_type": "STAIRCASE",
+        "is_step_free": false,
+        "security_clearance_required": 1
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F3_CENTRAL",
+    "node_name": "Third Floor Main Hallway",
+    "floor": 3,
+    "coordinates": { "x": 32.5, "y": 12.0, "z": 12.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "ELEV_F3",
+        "distance_meters": 3.0,
+        "base_transit_time_seconds": 2,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F3_EAST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "HALLWAY_F3_WEST",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R302",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F3_EAST",
+    "node_name": "Third Floor East Hallway",
+    "floor": 3,
+    "coordinates": { "x": 24.5, "y": 12.0, "z": 12.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F3_EAST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_R301",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "HALLWAY_F3_WEST",
+    "node_name": "Third Floor West Hallway",
+    "floor": 3,
+    "coordinates": { "x": 40.5, "y": 12.0, "z": 12.0 },
+    "node_type": "JUNCTION",
+    "is_accessible": true,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_CENTRAL",
+        "distance_meters": 8.0,
+        "base_transit_time_seconds": 6,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "STAIR_F3_WEST",
+        "distance_meters": 6.5,
+        "base_transit_time_seconds": 5,
+        "edge_type": "CORRIDOR",
+        "is_step_free": true,
+        "security_clearance_required": 1
+      },
+      {
+        "target_node": "ROOM_LAB3A",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R301",
+    "node_name": "Lecture Theatre 301",
+    "floor": 3,
+    "coordinates": { "x": 12.5, "y": 12.0, "z": 12.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_EAST",
+        "distance_meters": 12.0,
+        "base_transit_time_seconds": 10,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_R302",
+    "node_name": "Lab 302",
+    "floor": 3,
+    "coordinates": { "x": 32.5, "y": 6.0, "z": 12.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_CENTRAL",
+        "distance_meters": 6.0,
+        "base_transit_time_seconds": 5,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  },
+  {
+    "node_id": "ROOM_LAB3A",
+    "node_name": "Computer Lab 3A",
+    "floor": 3,
+    "coordinates": { "x": 50.5, "y": 12.0, "z": 12.0 },
+    "node_type": "EXAM_ROOM",
+    "is_accessible": false,
+    "adjacent_edges": [
+      {
+        "target_node": "HALLWAY_F3_WEST",
+        "distance_meters": 10.0,
+        "base_transit_time_seconds": 8,
+        "edge_type": "DOORWAY",
+        "is_step_free": false,
+        "security_clearance_required": 2
+      }
+    ]
+  }
+]

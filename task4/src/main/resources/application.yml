@@ -1,0 +1,16 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: task4-room-ranking
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: ${MONGO_DATABASE:idss}
+
+# Production path (RankingService) reads room master data from the Mongo
+# 'rooms' collection (master_context_file.md Section 5), seeded by DatabaseSeeder
+# from input_room_master.json. Local JSON files are used ONLY by the algorithm
+# benchmarks (BenchmarkTest / JMH), which call RoomRegistry/AHPTopsis directly
+# with no HTTP/Mongo in the timed path (MCF Section 2.3/9.1).

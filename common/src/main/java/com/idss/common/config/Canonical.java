@@ -55,6 +55,10 @@ public final class Canonical {
         if (roomId.startsWith(ROOM_ALIAS_PREFIX)) {
             return roomId;
         }
+        // Building graph node id (input_building_graph.json) uses ROOM_LAB3A
+        if ("LAB_3A".equals(roomId)) {
+            return "ROOM_LAB3A";
+        }
         return ROOM_ALIAS_PREFIX + roomId;
     }
 
