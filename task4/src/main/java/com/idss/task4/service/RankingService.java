@@ -13,6 +13,8 @@ import com.idss.task4.repository.RoomRankingDocument;
 import com.idss.task4.repository.RoomRankingRepository;
 
 import com.idss.common.util.JsonLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -44,6 +46,7 @@ import java.util.PriorityQueue;
 @Service
 public class RankingService {
 
+    private static final Logger log = LoggerFactory.getLogger(RankingService.class);
     private static final String ROOMS_COLLECTION = "rooms";
     private static final String ALGORITHM_LABEL = "AHP (weights) + TOPSIS (ranking)";
 
@@ -116,10 +119,16 @@ public class RankingService {
             ));
         }
 
-        // Persist to MongoDB — upsert by examId (which is the @Id)
-        RoomRankingDocument doc = new RoomRankingDocument(
-                exam.getExamId(), ALGORITHM_LABEL, rankings, Instant.now());
-        rankingRepository.save(doc);
+        // Persist to MongoDB — upsert by examId (which is the @Id). Non-fatal:
+        // ranking computation must not be blocked by database availability
+        // (master_context_file.md Section 2.4), matching task1/task3/task5.
+        try {
+            RoomRankingDocument doc = new RoomRankingDocument(
+                    exam.getExamId(), ALGORITHM_LABEL, rankings, Instant.now());
+            rankingRepository.save(doc);
+        } catch (Exception e) {
+            log.warn("Failed to persist room rankings to MongoDB (result still returned to caller): {}", e.getMessage());
+        }
 
         return rankings;
     }

@@ -14,6 +14,8 @@ import com.idss.task2.model.ProctorRoster;
 import com.idss.task2.model.RosterEntry;
 import com.idss.task2.model.RosterMetrics;
 import com.idss.task2.repository.ProctorRosterRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -28,6 +30,7 @@ import java.util.Set;
 @Service
 public class AssignmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(AssignmentService.class);
     private static final int MAX_REFINEMENT_ITERS = 5;
 
     private final CostMatrixBuilder costMatrixBuilder = new CostMatrixBuilder();
@@ -144,7 +147,13 @@ public class AssignmentService {
         }
 
         ProctorRoster roster = buildRoster(rawAssignments, examById, status, reason, remedy);
-        rosterRepository.save(roster);
+        // Non-fatal: assignment computation must not be blocked by database
+        // availability (master_context_file.md Section 2.4), matching task1/task3/task5.
+        try {
+            rosterRepository.save(roster);
+        } catch (Exception e) {
+            log.warn("Failed to persist proctor roster to MongoDB (result still returned to caller): {}", e.getMessage());
+        }
 
         RosterMetrics metrics = buildMetrics(executionTimeMs, violations,
                 fairnessVariance, roster.total_shifts_allocated, status);
