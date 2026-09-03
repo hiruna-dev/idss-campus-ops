@@ -90,7 +90,10 @@ public class Task3ServiceTest {
 
     @Test
     void testOutputJsonFileGeneration() {
-        com.idss.task3.service.ClashAnalysisService analysisService = new com.idss.task3.service.ClashAnalysisService(task3Service);
+        com.idss.task3.repository.ConflictGraphRepository conflictGraphRepository =
+                org.mockito.Mockito.mock(com.idss.task3.repository.ConflictGraphRepository.class);
+        com.idss.task3.service.ClashAnalysisService analysisService =
+                new com.idss.task3.service.ClashAnalysisService(task3Service, conflictGraphRepository);
         com.idss.task3.service.ClashAnalysisService.AnalysisResult result = analysisService.analyze(sampleGraph, "DSATUR");
 
         assertNotNull(result);

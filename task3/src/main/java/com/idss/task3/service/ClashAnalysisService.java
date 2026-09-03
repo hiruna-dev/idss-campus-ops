@@ -11,6 +11,7 @@ import com.idss.task3.graph.ConflictGraph;
 import com.idss.task3.model.ClashAnalysisOutput;
 import com.idss.task3.model.ConflictEdge;
 import com.idss.task3.model.VertexResult;
+import com.idss.task3.repository.ConflictGraphRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,9 +30,11 @@ public class ClashAnalysisService {
 
     private final Task3Service task3Service;
     private final ObjectMapper objectMapper;
+    private final ConflictGraphRepository conflictGraphRepository;
 
-    public ClashAnalysisService(Task3Service task3Service) {
+    public ClashAnalysisService(Task3Service task3Service, ConflictGraphRepository conflictGraphRepository) {
         this.task3Service = task3Service;
+        this.conflictGraphRepository = conflictGraphRepository;
         this.objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     }
 
@@ -113,6 +116,15 @@ public class ClashAnalysisService {
 
         // Persist JSON files
         writeOutputFiles(graphResponse, analysisOutput);
+
+        // Persist to MongoDB 'conflict_graph' collection (non-fatal — route
+        // computation must not be blocked by database availability, matching
+        // the pattern used by task1's RouteController.persistRoutes).
+        try {
+            conflictGraphRepository.save(graphResponse);
+        } catch (Exception e) {
+            log.warn("Failed to persist conflict graph to MongoDB (result still returned to caller): {}", e.getMessage());
+        }
 
         return new AnalysisResult(graphResponse, analysisOutput);
     }
