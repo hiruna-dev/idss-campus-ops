@@ -205,10 +205,12 @@ public class AssignmentService {
         //count current assignments per exam and per invigilator
         Map<String, Integer> assignedPerExam = new HashMap<>();
         Map<String, Integer> shiftsPerInv = new HashMap<>();
+        Map<String, Integer> shiftsPerDay = new HashMap<>();
         Set<String> assignedPairs = new HashSet<>();
         for (Assignment a : assignments) {
             assignedPerExam.merge(a.exam.exam_id, 1, Integer::sum);
             shiftsPerInv.merge(a.inv.invigilator_id, 1, Integer::sum);
+            shiftsPerDay.merge(a.inv.invigilator_id + "|" + a.exam.date, 1, Integer::sum);
             assignedPairs.add(a.inv.invigilator_id + "|" + a.exam.exam_id);
         }
 
@@ -222,6 +224,7 @@ public class AssignmentService {
                 if (assignedPairs.contains(inv.invigilator_id + "|" + exam.exam_id)) continue;
                 if (shiftsPerInv.getOrDefault(inv.invigilator_id, 0) >= inv.max_total_shifts) continue;
                 if (constraintValidator.hasHardViolation(inv, exam)) continue;
+                if (shiftsPerDay.getOrDefault(inv.invigilator_id + "|" + exam.date, 0) >= inv.max_shifts_per_day) continue;
                 candidates.add(inv);
             }
             candidates.sort(java.util.Comparator.comparingInt(

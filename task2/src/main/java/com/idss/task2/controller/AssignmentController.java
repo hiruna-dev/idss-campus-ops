@@ -44,11 +44,12 @@ public class AssignmentController {
 
     //returns the seed invigilator list (read-only; used by the frontend dashboard for live counts)
     @GetMapping("/invigilators")
-    public ResponseEntity<List<Invigilator>> getInvigilators() {
+    public ResponseEntity<?> getInvigilators() {
         try {
             return ResponseEntity.ok(JsonLoader.loadList(invigilatorsPath, Invigilator.class));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            String msg = e.getMessage() != null ? e.getMessage() : "Error reading invigilators";
+            return ResponseEntity.internalServerError().body(Map.of("error", msg));
         }
     }
 
@@ -75,10 +76,7 @@ public class AssignmentController {
                 //file write failed but the roster is still returned to the caller
             }
 
-            //422 for INFEASIBLE, 200 otherwise
-            if (Canonical.STATUS_INFEASIBLE.equals(roster.status)) {
-                return ResponseEntity.unprocessableEntity().body(roster);
-            }
+            //return 200 even for INFEASIBLE so the frontend doesn't treat it as a crash
             return ResponseEntity.ok(roster);
         } catch (Exception e) {
             //unexpected error (bad input, missing file, etc)
