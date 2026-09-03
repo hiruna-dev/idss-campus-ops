@@ -1,0 +1,132 @@
+[
+  {
+    "invigilator_id": "INV_01",
+    "name": "Invigilator 1",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 6,
+    "restricted_courses": [],
+    "preferred_floors": [
+      1,
+      2,
+      3
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_02",
+    "name": "Invigilator 2",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 7,
+    "restricted_courses": [],
+    "preferred_floors": [
+      2,
+      3,
+      1
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_03",
+    "name": "Invigilator 3",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 8,
+    "restricted_courses": [],
+    "preferred_floors": [
+      3,
+      1,
+      2
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_04",
+    "name": "Invigilator 4",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 9,
+    "restricted_courses": [],
+    "preferred_floors": [
+      1,
+      2,
+      3
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_05",
+    "name": "Invigilator 5",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 10,
+    "restricted_courses": [],
+    "preferred_floors": [
+      2,
+      3,
+      1
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_06",
+    "name": "Invigilator 6",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 6,
+    "restricted_courses": [],
+    "preferred_floors": [
+      3,
+      1,
+      2
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_07",
+    "name": "Invigilator 7",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 7,
+    "restricted_courses": [],
+    "preferred_floors": [
+      1,
+      2,
+      3
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_08",
+    "name": "Invigilator 8",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 8,
+    "restricted_courses": [],
+    "preferred_floors": [
+      2,
+      3,
+      1
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_09",
+    "name": "Invigilator 9",
+    "max_shifts_per_day": 2,
+    "max_total_shifts": 9,
+    "restricted_courses": [],
+    "preferred_floors": [
+      3,
+      1,
+      2
+    ],
+    "unavailability": []
+  },
+  {
+    "invigilator_id": "INV_10",
+    "name": "Invigilator 10",
+    "max_shifts_per_day": 3,
+    "max_total_shifts": 10,
+    "restricted_courses": [],
+    "preferred_floors": [
+      1,
+      2,
+      3
+    ],
+    "unavailability": []
+  }
+]

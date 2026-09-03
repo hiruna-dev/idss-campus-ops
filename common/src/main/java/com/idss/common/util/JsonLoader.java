@@ -29,11 +29,21 @@ public final class JsonLoader {
         return MAPPER;
     }
 
-    /** Resolves a path to a {@link File}, anchoring relative paths to {@code user.dir}. */
+    /** Resolves a path to a {@link File}, checking user.dir and parent directories for submodule runs. */
     public static File resolve(String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
+        }
+        File current = new File(System.getProperty("user.dir"));
+        for (int i = 0; i < 3; i++) {
+            File candidate = new File(current, path);
+            if (candidate.exists()) {
+                return candidate;
+            }
+            File parent = current.getParentFile();
+            if (parent == null) break;
+            current = parent;
         }
         return new File(System.getProperty("user.dir"), path);
     }

@@ -1,0 +1,501 @@
+package com.idss.task5.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.idss.common.model.*;
+import com.idss.task5.algorithm.*;
+import com.idss.task5.dto.*;
+import com.idss.task5.repository.ScheduleRepository;
+import com.idss.task5.util.CanonicalMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Orchestrates the timetable generation pipeline:
+ * 1. Load input data (from local JSON files or API request)
+ * 2. Build conflict matrix from student enrollments
+ * 3. Run selected algorithm (GA, SA, or Greedy)
+ * 4. Build output_master_schedule.json
+ * 5. Save to MongoDB + write JSON file
+ */
+@Service
+public class TimetableService {
+
+    private final ScheduleRepository scheduleRepository;
+    private final ObjectMapper objectMapper;
+
+    @Value("${task5.data.input-dir:../data/input}")
+    private String inputDir;
+
+    @Value("${task5.data.output-dir:../data/shared}")
+    private String outputDir;
+
+    @Value("${task5.algorithm.default:GA}")
+    private String defaultAlgorithm = "GA";
+    @Value("${task5.algorithm.ga.population-size:100}")
+    private int gaPopulationSize = 100;
+    @Value("${task5.algorithm.ga.generations:500}")
+    private int gaGenerations = 500;
+    @Value("${task5.algorithm.ga.mutation-rate:0.05}")
+    private double gaMutationRate = 0.05;
+    @Value("${task5.algorithm.ga.tournament-size:5}")
+    private int gaTournamentSize = 5;
+    @Value("${task5.algorithm.ga.hill-climbing-top-n:5}")
+    private int gaHillClimbingTopN = 5;
+    @Value("${task5.algorithm.sa.initial-temperature:1000}")
+    private double saInitialTemperature = 1000;
+    @Value("${task5.algorithm.sa.cooling-rate:0.95}")
+    private double saCoolingRate = 0.95;
+    @Value("${task5.algorithm.sa.min-temperature:1}")
+    private double saMinTemperature = 1;
+    @Value("${task5.fatigue.hard-weight:1000}")
+    private int hardWeight = ConstraintValidator.HARD_WEIGHT;
+    @Value("${task5.fatigue.back-to-back-weight:10}")
+    private int backToBackWeight = ConstraintValidator.BACK_TO_BACK_WEIGHT;
+    @Value("${task5.fatigue.same-day-weight:5}")
+    private int sameDayWeight = ConstraintValidator.SAME_DAY_WEIGHT;
+    @Value("${task5.fatigue.consecutive-day-weight:1}")
+    private int consecutiveDayWeight = ConstraintValidator.CONSECUTIVE_DAY_WEIGHT;
+
+    public TimetableService(ScheduleRepository scheduleRepository) {
+        this.scheduleRepository = scheduleRepository;
+        this.objectMapper = new ObjectMapper();
+    }
+
+    /**
+     * Generate timetable using local JSON files (development mode).
+     * This is the primary method per leader's instruction: "use local JSON files for dev".
+     */
+    public Map<String, Object> generateFromLocalFiles(String algorithmChoice) throws Exception {
+        // Load all inputs from local JSON files
+        List<Exam> exams = loadJson(inputDir + "/input_exams.json", new TypeReference<List<Exam>>() {});
+        List<Student> students = loadJson(inputDir + "/input_student_enrollments.json", new TypeReference<List<Student>>() {});
+        List<Timeslot> timeslots = loadJson(inputDir + "/input_timeslots.json", new TypeReference<List<Timeslot>>() {});
+
+        // Load Task 4 outputs — prefer shared output files, fall back to input seeds
+        List<RankedRoom> roomRankings = loadJsonWithFallback(
+                outputDir + "/output_room_rankings.json",
+                inputDir + "/input_room_rankings.json",
+                new TypeReference<List<RankedRoom>>() {});
+        List<RoomReference> roomReferences = loadJsonWithFallback(
+                outputDir + "/output_room_reference.json",
+                inputDir + "/input_room_reference.json",
+                new TypeReference<List<RoomReference>>() {});
+
+        return generateTimetable(exams, students, timeslots, roomRankings, roomReferences, algorithmChoice);
+    }
+
+    /**
+     * Get timeslots from local JSON files.
+     */
+    public List<Timeslot> getTimeslots() throws Exception {
+        return loadJson(inputDir + "/input_timeslots.json", new TypeReference<List<Timeslot>>() {});
+    }
+
+    /**
+     * Generate a timetable from an API request payload.
+     */
+    public Map<String, Object> generateFromRequest(TimetableRequest request, String algorithmChoice) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+        return generateTimetable(
+                request.exams,
+                request.students,
+                request.timeslots,
+                request.room_rankings,
+                request.room_references,
+                algorithmChoice);
+    }
+
+    /**
+     * Core timetable generation pipeline.
+     */
+    public Map<String, Object> generateTimetable(
+            List<Exam> exams,
+            List<Student> students,
+            List<Timeslot> timeslots,
+            List<RankedRoom> roomRankings,
+            List<RoomReference> roomReferences,
+            String algorithmChoice) {
+        validateInputs(exams, students, timeslots, roomRankings, roomReferences, algorithmChoice);
+
+        // Step 1: Extract course codes and build maps
+        List<String> courseCodes = exams.stream()
+                .map(e -> e.course_code)
+                .collect(Collectors.toList());
+
+        Map<String, Exam> examMap = exams.stream()
+                .collect(Collectors.toMap(e -> e.course_code, e -> e));
+
+        // Build room ranking map: exam_id -> list of ranked rooms (sorted by rank)
+        Map<String, List<RankedRoom>> roomRankingMap = new HashMap<>();
+        if (roomRankings != null) {
+            for (RankedRoom rr : roomRankings) {
+                roomRankingMap.computeIfAbsent(rr.exam_id, k -> new ArrayList<>()).add(rr);
+            }
+            // Sort each list by rank
+            for (List<RankedRoom> list : roomRankingMap.values()) {
+                list.sort(Comparator.comparingInt(r -> r.rank));
+            }
+        }
+
+        // Build room reference map: room_id -> RoomReference
+        Map<String, RoomReference> roomRefMap = new HashMap<>();
+        if (roomReferences != null) {
+            for (RoomReference ref : roomReferences) {
+                roomRefMap.put(ref.room_id, ref);
+            }
+        }
+
+        // Step 2: Build conflict matrix
+        ConflictMatrix conflictMatrix = new ConflictMatrix(students, courseCodes);
+
+        // Step 3: Create constraint validator
+        ConstraintValidator validator = new ConstraintValidator(
+                conflictMatrix, timeslots, exams,
+                hardWeight, backToBackWeight, sameDayWeight, consecutiveDayWeight);
+
+        int numSlots = timeslots.size();
+
+        // Step 4: Run selected algorithm
+        AlgorithmResult result;
+        String algoName = algorithmChoice != null && !algorithmChoice.isBlank()
+                ? algorithmChoice.trim().toUpperCase(Locale.ROOT)
+                : (defaultAlgorithm == null ? "GA" : defaultAlgorithm.trim().toUpperCase(Locale.ROOT));
+
+        switch (algoName) {
+            case "GREEDY":
+                GreedyScheduler greedy = new GreedyScheduler(conflictMatrix, validator, numSlots);
+                result = greedy.run();
+                break;
+            case "SA":
+                SimulatedAnnealing sa = new SimulatedAnnealing(conflictMatrix, validator, numSlots);
+                sa.setParameters(saInitialTemperature, saCoolingRate, saMinTemperature);
+                result = sa.run();
+                break;
+            case "GA":
+                GeneticEngine ga = new GeneticEngine(conflictMatrix, validator, numSlots);
+                ga.setParameters(
+                        gaPopulationSize, gaGenerations, gaMutationRate,
+                        gaTournamentSize, gaHillClimbingTopN);
+                result = ga.run();
+                break;
+            default:
+                throw new IllegalArgumentException("algorithm must be GA, SA, or GREEDY");
+        }
+
+        // Step 5: Build output_master_schedule.json
+        int[] chromosome = result.bestChromosome;
+        List<MasterScheduleEntry> schedule = new ArrayList<>();
+        Map<Integer, Set<String>> usedRoomsBySlot = new HashMap<>();
+        Map<Integer, Integer> examsPerSlot = new HashMap<>();
+        int resourceViolations = 0;
+
+        for (int i = 0; i < courseCodes.size(); i++) {
+            String courseCode = courseCodes.get(i);
+            int slotIndex = chromosome[i];
+            Timeslot slot = timeslots.get(slotIndex);
+            Exam exam = examMap.get(courseCode);
+
+            // Find best room for this exam from Task 4 rankings
+            String roomId = "UNASSIGNED";
+            int floor = 0;
+            String canonicalRoomId = "ROOM_UNASSIGNED";
+
+            // Select the highest-ranked eligible room not already used in this slot.
+            List<RankedRoom> ranked = roomRankingMap.get(exam.exam_id);
+            if (ranked != null && !ranked.isEmpty()) {
+                Set<String> usedRooms = usedRoomsBySlot.computeIfAbsent(slotIndex, k -> new HashSet<>());
+                for (RankedRoom candidate : ranked) {
+                    RoomReference ref = roomRefMap.get(candidate.room_id);
+                    if (!candidate.meets_hard_constraints || ref == null
+                            || (exam.requires_accessibility && !ref.is_accessible)
+                            || usedRooms.contains(candidate.room_id)) {
+                        continue;
+                    }
+                    roomId = candidate.room_id;
+                    canonicalRoomId = CanonicalMapper.toCanonical(roomId);
+                    floor = ref.floor;
+                    usedRooms.add(roomId);
+                    break;
+                }
+            }
+            if ("UNASSIGNED".equals(roomId)) {
+                resourceViolations++;
+            }
+
+            int parallelCount = examsPerSlot.merge(slotIndex, 1, Integer::sum);
+            if (slot.max_exams_parallel > 0 && parallelCount > slot.max_exams_parallel) {
+                resourceViolations++;
+            }
+
+            MasterScheduleEntry entry = new MasterScheduleEntry();
+            entry.exam_id = exam.exam_id;
+            entry.course_code = exam.course_code;
+            entry.course_title = exam.course_title;
+            entry.date = slot.date;
+            entry.session = slot.session;
+            entry.start_time = slot.start_time;
+            entry.end_time = slot.end_time;
+            entry.room_id = roomId;
+            entry.canonical_room_id = canonicalRoomId;
+            entry.floor = floor;
+            entry.allocated_students = exam.student_count;
+            entry.required_invigilators = MasterScheduleEntry.calculateInvigilators(exam.student_count);
+            entry.requires_accessibility = exam.requires_accessibility;
+            entry.requires_step_free_access = exam.requires_accessibility; // same boolean, derived
+
+            schedule.add(entry);
+        }
+
+        // Room availability and slot capacity are hard constraints in the final output.
+        result.hardViolations += resourceViolations;
+
+        // Step 6: Build metrics response
+        Map<String, Object> metrics = new LinkedHashMap<>();
+        metrics.put("algorithm_used", result.algorithmName);
+        metrics.put("execution_time_ms", Math.round(result.executionTimeMs * 100.0) / 100.0);
+        metrics.put("memory_allocated_kb", Math.round(result.memoryKb * 100.0) / 100.0);
+        metrics.put("hard_constraint_violations", result.hardViolations);
+        metrics.put("resource_constraint_violations", resourceViolations);
+        metrics.put("clash_free", result.isClashFree());
+        metrics.put("total_fatigue_penalty", result.totalFatiguePenalty);
+
+        Map<String, Object> breakdown = new LinkedHashMap<>();
+        breakdown.put("back_to_back_same_day", result.fatigueBreakdown[0]);
+        breakdown.put("two_exams_same_day", result.fatigueBreakdown[1]);
+        breakdown.put("consecutive_day", result.fatigueBreakdown[2]);
+        metrics.put("fatigue_breakdown", breakdown);
+
+        metrics.put("soft_constraint_satisfaction_percentage",
+                validator.calculateSatisfactionPercentage(chromosome));
+
+        if (result.generationsEvaluated > 0) {
+            metrics.put("generations_evaluated", result.generationsEvaluated);
+            metrics.put("population_size", result.populationSize);
+            metrics.put("convergence_generation", result.convergenceGeneration);
+        }
+        if (result.iterationsEvaluated > 0) {
+            metrics.put("iterations_evaluated", result.iterationsEvaluated);
+        }
+
+        // Step 7: Build fatigue report
+        Map<String, Object> fatigueReport = buildFatigueReport(students, chromosome, courseCodes, timeslots, conflictMatrix);
+
+        // Step 8: Save to MongoDB (NOT benchmarked — done after algorithm)
+        try {
+            scheduleRepository.deleteAll();
+            scheduleRepository.saveAll(schedule);
+        } catch (Exception e) {
+            // MongoDB might not be available during local dev — that's OK
+            System.err.println("Warning: Could not save to MongoDB: " + e.getMessage());
+        }
+
+        // Step 9: Write output JSON files
+        try {
+            writeJson(outputDir + "/output_master_schedule.json", schedule);
+            writeJson(outputDir + "/output_timetable_metrics.json", metrics);
+            writeJson(outputDir + "/output_fatigue_report.json", fatigueReport);
+        } catch (Exception e) {
+            System.err.println("Warning: Could not write output files: " + e.getMessage());
+        }
+
+        // Build final response
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("generation_timestamp", Instant.now().toString());
+        response.put("status", result.isClashFree() ? "OPTIMAL" : "INFEASIBLE");
+        response.put("algorithm_used", result.algorithmName);
+        response.put("schedule", schedule);
+        response.put("metrics", metrics);
+        response.put("fatigue_report", fatigueReport);
+
+        if (!result.isClashFree()) {
+            response.put("reason", result.hardViolations + " hard constraint violations detected");
+            response.put("suggested_remedy", "Add more timeslots or reduce exam count");
+        }
+
+        return response;
+    }
+
+    private void validateInputs(
+            List<Exam> exams,
+            List<Student> students,
+            List<Timeslot> timeslots,
+            List<RankedRoom> roomRankings,
+            List<RoomReference> roomReferences,
+            String algorithmChoice) {
+        requireNonEmpty(exams, "exams");
+        requireNonEmpty(students, "students");
+        requireNonEmpty(timeslots, "timeslots");
+        requireNonEmpty(roomRankings, "room_rankings");
+        requireNonEmpty(roomReferences, "room_references");
+
+        Set<String> examIds = new HashSet<>();
+        Set<String> courseCodes = new HashSet<>();
+        for (Exam exam : exams) {
+            if (exam == null || isBlank(exam.exam_id) || isBlank(exam.course_code)) {
+                throw new IllegalArgumentException("Every exam needs exam_id and course_code");
+            }
+            if (!examIds.add(exam.exam_id) || !courseCodes.add(exam.course_code)) {
+                throw new IllegalArgumentException("Exam IDs and course codes must be unique");
+            }
+        }
+
+        Set<String> roomIds = new HashSet<>();
+        for (RoomReference room : roomReferences) {
+            if (room == null || isBlank(room.room_id) || !roomIds.add(room.room_id)) {
+                throw new IllegalArgumentException("Room references must have unique room_id values");
+            }
+        }
+
+        Set<String> rankedExamIds = new HashSet<>();
+        for (RankedRoom room : roomRankings) {
+            if (room == null || isBlank(room.exam_id) || isBlank(room.room_id)
+                    || room.rank < 1 || !examIds.contains(room.exam_id)
+                    || !roomIds.contains(room.room_id)) {
+                throw new IllegalArgumentException("Room rankings contain an invalid exam or room reference");
+            }
+            rankedExamIds.add(room.exam_id);
+        }
+        if (!rankedExamIds.containsAll(examIds)) {
+            throw new IllegalArgumentException("Every exam needs at least one room ranking");
+        }
+
+        for (Timeslot slot : timeslots) {
+            if (slot == null || isBlank(slot.slot_id) || isBlank(slot.date)
+                    || isBlank(slot.session) || isBlank(slot.start_time)
+                    || isBlank(slot.end_time) || slot.max_exams_parallel < 1) {
+                throw new IllegalArgumentException(
+                        "Every timeslot needs slot_id, date, session, times, and positive max_exams_parallel");
+            }
+        }
+
+        String normalizedAlgorithm = algorithmChoice == null
+                ? "GA"
+                : algorithmChoice.trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("GA", "SA", "GREEDY").contains(normalizedAlgorithm)) {
+            throw new IllegalArgumentException("algorithm must be GA, SA, or GREEDY");
+        }
+    }
+
+    private static void requireNonEmpty(List<?> values, String fieldName) {
+        if (values == null || values.isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " must not be empty");
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    /**
+     * Build the fatigue report by auditing each student's schedule.
+     */
+    private Map<String, Object> buildFatigueReport(
+            List<Student> students, int[] chromosome, List<String> courseCodes,
+            List<Timeslot> timeslots, ConflictMatrix conflictMatrix) {
+
+        int totalStudents = students.size();
+        int zeroFatigue = 0;
+        int withBackToBack = 0;
+        String worstStudentId = null;
+        int worstScore = 0;
+        List<String> worstSchedule = new ArrayList<>();
+
+        for (Student student : students) {
+            int studentFatigue = 0;
+            boolean hasBackToBack = false;
+            List<int[]> examSlots = new ArrayList<>();
+
+            // Find which slots this student's exams are in
+            if (student.enrolled_courses != null) {
+                for (String course : student.enrolled_courses) {
+                    int examIdx = conflictMatrix.getIndex(course);
+                    if (examIdx >= 0) {
+                        examSlots.add(new int[]{chromosome[examIdx], examIdx});
+                    }
+                }
+            }
+
+            // Sort by slot index
+            examSlots.sort(Comparator.comparingInt(a -> a[0]));
+
+            // Check pairs for fatigue
+            List<String> studentSchedule = new ArrayList<>();
+            for (int i = 0; i < examSlots.size(); i++) {
+                Timeslot ts = timeslots.get(examSlots.get(i)[0]);
+                String courseCode = courseCodes.get(examSlots.get(i)[1]);
+                studentSchedule.add(courseCode + ": " + ts.date + " " + ts.session);
+
+                for (int j = i + 1; j < examSlots.size(); j++) {
+                    Timeslot tsA = ts;
+                    Timeslot tsB = timeslots.get(examSlots.get(j)[0]);
+
+                    if (tsA.date.equals(tsB.date)) {
+                        studentFatigue += 5; // same day
+                        if ((tsA.session.equals("Morning") && tsB.session.equals("Afternoon"))
+                         || (tsA.session.equals("Afternoon") && tsB.session.equals("Morning"))) {
+                            studentFatigue += 10; // back to back
+                            hasBackToBack = true;
+                        }
+                    }
+                }
+            }
+
+            if (studentFatigue == 0) zeroFatigue++;
+            if (hasBackToBack) withBackToBack++;
+
+            if (studentFatigue > worstScore) {
+                worstScore = studentFatigue;
+                worstStudentId = student.student_id;
+                worstSchedule = studentSchedule;
+            }
+        }
+
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("total_students_audited", totalStudents);
+        report.put("students_with_zero_fatigue", zeroFatigue);
+        report.put("students_with_back_to_back", withBackToBack);
+
+        Map<String, Object> worst = new LinkedHashMap<>();
+        worst.put("student_id", worstStudentId);
+        worst.put("fatigue_score", worstScore);
+        worst.put("schedule", worstSchedule);
+        report.put("worst_affected_student", worst);
+
+        return report;
+    }
+
+    /**
+     * Get current schedule from MongoDB.
+     */
+    public List<MasterScheduleEntry> getCurrentSchedule() {
+        return scheduleRepository.findAll();
+    }
+
+    // Helper: load JSON from file
+    private <T> T loadJson(String filePath, TypeReference<T> typeRef) throws Exception {
+        return objectMapper.readValue(new File(filePath), typeRef);
+    }
+
+    // Helper: load JSON preferring primary path, falling back to secondary
+    private <T> T loadJsonWithFallback(String primaryPath, String fallbackPath, TypeReference<T> typeRef) throws Exception {
+        File primary = new File(primaryPath);
+        if (primary.exists()) {
+            return loadJson(primaryPath, typeRef);
+        }
+        return loadJson(fallbackPath, typeRef);
+    }
+
+    // Helper: write JSON to file
+    private void writeJson(String filePath, Object data) throws Exception {
+        new File(filePath).getParentFile().mkdirs();
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), data);
+    }
+}

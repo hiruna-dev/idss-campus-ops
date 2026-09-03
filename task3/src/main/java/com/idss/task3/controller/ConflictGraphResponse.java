@@ -3,9 +3,18 @@ package com.idss.task3.controller;
 import com.idss.task3.model.ConflictEdge;
 import com.idss.task3.model.VertexResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
+/**
+ * Persisted into MongoDB's {@code conflict_graph} collection (master_context_file.md
+ * Section 5) in addition to being returned as the {@code POST /detect} API response
+ * and written to {@code output_conflict_graph.json}.
+ */
+@Document(collection = "conflict_graph")
 public class ConflictGraphResponse {
+    @Id
     @JsonProperty("generation_timestamp")
     private String generationTimestamp;
     private String status;

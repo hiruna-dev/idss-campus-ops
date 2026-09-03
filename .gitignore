@@ -36,3 +36,7 @@ frontend/build/
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
 frontend/.env*.local
+
+
+task1/data/
+task5/null/
