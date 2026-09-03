@@ -45,11 +45,13 @@ export const api = {
     rank: (examAndRooms) => post("/api/task4/rank", examAndRooms),
     getRankings: (examId) => get(`/api/task4/rankings/${examId}`),
     getRoomReference: () => get("/api/task4/room-reference"),
+    getRooms: () => get("/api/task4/rooms"),
     benchmark: () => get("/api/task4/benchmark"),
   },
   task5: {
-    generate: (input) => post("/api/task5/generate", input),
+    generate: (request, algorithm = "GA") => post(`/api/task5/generate?algorithm=${algorithm}`, request),
     getSchedule: () => get("/api/task5/schedule"),
+    getTimeslots: () => get("/api/task5/timeslots"),
     benchmark: () => get("/api/task5/benchmark"),
   },
 };

@@ -11,7 +11,7 @@ import { JsonPreview } from "@/components/JsonPreview";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useModuleRun } from "@/contexts/PipelineContext";
 import { moduleById } from "@/lib/modules";
-import { exams, rooms } from "@/lib/data/registry";
+import { exams as staticExams, rooms as staticRooms } from "@/lib/data/registry";
 import { roomRankings as sampleRankings, roomRankingMetrics } from "@/lib/data/outputs";
 import { api } from "@/lib/api/index";
 
@@ -26,30 +26,36 @@ const criteria = [
 export default function Task4Page() {
   const module = moduleById("task4");
   const { run, execute } = useModuleRun("task4");
-  const [examId, setExamId] = useState(exams[0].exam_id);
+  
+  const [liveExams, setLiveExams] = useState(null);
+  const [examId, setExamId] = useState(null); // will initialize when exams load
+  
   const [liveRoomReference, setLiveRoomReference] = useState(null);
+  const [liveRooms, setLiveRooms] = useState(null);
   const complete = run.state === "complete";
 
   useEffect(() => {
     let cancelled = false;
-    api.task4
-      .getRoomReference()
-      .then((data) => {
-        if (!cancelled) setLiveRoomReference(data);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    api.task4.getRoomReference().then((data) => { if (!cancelled) setLiveRoomReference(data); }).catch(() => {});
+    api.task4.getRooms().then((data) => { if (!cancelled) setLiveRooms(data); }).catch(() => {});
+    api.task3.getExams().then((data) => { 
+        if (!cancelled && data && data.length > 0) {
+            setLiveExams(data);
+            setExamId(data[0].exam_id);
+        }
+    }).catch(() => {});
+      
+    return () => { cancelled = true; };
   }, []);
 
-  // The live /room-reference endpoint only exposes room_id/room_name/floor/is_accessible
-  // (Task 4's deliberately-minimal lookup table for Task 1) — no capacity/AC/noise, so the
-  // detailed room table below still needs the full static room master for those attributes.
+  const exams = liveExams ?? staticExams;
+  const currentExamId = examId ?? exams[0]?.exam_id;
+  
+  const rooms = liveRooms ?? staticRooms;
   const roomReference = liveRoomReference ?? rooms.map((room) => ({ room_id: room.room_id, room_name: room.room_name, floor: room.floor, is_accessible: room.is_accessible }));
-  const roomCount = liveRoomReference?.length ?? rooms.length;
+  const roomCount = rooms.length;
 
-  const selectedExam = exams.find((item) => item.exam_id === examId) ?? exams[0];
+  const selectedExam = exams.find((item) => item.exam_id === currentExamId) ?? exams[0];
   const rankings = run.data?.rankings ?? (Array.isArray(run.data) ? run.data : null) ?? sampleRankings;
   // Pin the displayed exam to whichever one actually produced `rankings`, not the live
   // dropdown selection — otherwise flipping the selector after a run silently mismatches
@@ -93,7 +99,7 @@ export default function Task4Page() {
             </label>
             <select
               id="exam-select"
-              value={examId}
+              value={currentExamId}
               onChange={(event) => setExamId(event.target.value)}
               className="mt-1.5 w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none"
             >

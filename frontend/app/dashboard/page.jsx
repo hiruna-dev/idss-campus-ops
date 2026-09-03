@@ -12,8 +12,7 @@ import { buildingGraph, dispatchOrders } from "@/lib/data/buildingGraph";
 import { clashAnalysis, masterSchedule } from "@/lib/data/outputs";
 import { api } from "@/lib/api/index";
 
-// Fetched from the gateway on load. `timeslots` has no owning service/endpoint
-// anywhere in the system, so it stays on the static seed sample.
+// Fetched from the gateway on load.
 const liveSources = [
   { key: "exams", fetch: api.task3.getExams },
   { key: "enrollments", fetch: api.task3.getEnrollments },
@@ -21,6 +20,7 @@ const liveSources = [
   { key: "invigilators", fetch: api.task2.getInvigilators },
   { key: "buildingGraph", fetch: api.task1.getBuildingGraph },
   { key: "dispatchOrders", fetch: api.task1.getDispatchOrders },
+  { key: "timeslots", fetch: api.task5.getTimeslots },
 ];
 
 export default function DashboardPage() {
@@ -86,22 +86,23 @@ export default function DashboardPage() {
   const invigilatorCount = live?.invigilators?.length ?? invigilators.length;
   const buildingGraphCount = live?.buildingGraph?.length ?? buildingGraph.length;
   const dispatchOrderCount = live?.dispatchOrders?.length ?? dispatchOrders.length;
+  const timeslotCount = live?.timeslots?.length ?? timeslots.length;
 
   const stats = [
     { label: "Exams scheduled", value: String(examCount), detail: live?.exams ? "live from Task 3" : "sample dataset" },
     { label: "Students", value: String(studentCount), detail: live?.enrollments ? "live enrolment records" : "sample dataset" },
     { label: "Rooms in registry", value: String(roomCount), detail: live?.rooms ? "live from Task 4" : "sample dataset" },
-    { label: "Sessions required", value: `${clashAnalysis.minimum_sessions} / ${timeslots.length}`, detail: "DSATUR lower bound — run Task 3 for live" },
+    { label: "Sessions required", value: `${clashAnalysis.minimum_sessions} / ${timeslotCount}`, detail: "DSATUR lower bound — run Task 3 for live" },
   ];
 
   const datasets = [
     { file: "input_exams.json", endpoint: "GET /api/task3/exams", records: examCount, live: Boolean(live?.exams) },
     { file: "input_student_enrollments.json", endpoint: "GET /api/task3/enrollments", records: studentCount, live: Boolean(live?.enrollments) },
     { file: "input_room_master.json", endpoint: "GET /api/task4/room-reference", records: roomCount, live: Boolean(live?.rooms) },
-    { file: "input_timeslots.json", endpoint: null, records: timeslots.length, live: false },
     { file: "input_invigilators.json", endpoint: "GET /api/task2/invigilators", records: invigilatorCount, live: Boolean(live?.invigilators) },
     { file: "input_building_graph.json", endpoint: "GET /api/task1/building-graph", records: buildingGraphCount, live: Boolean(live?.buildingGraph) },
     { file: "input_dispatch_orders.json", endpoint: "GET /api/task1/dispatch-orders", records: dispatchOrderCount, live: Boolean(live?.dispatchOrders) },
+    { file: "input_timeslots.json", endpoint: "GET /api/task5/timeslots", records: timeslotCount, live: Boolean(live?.timeslots) },
   ];
 
   return (

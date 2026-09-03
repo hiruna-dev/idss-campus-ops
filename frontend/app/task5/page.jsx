@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2Icon, SendIcon } from "lucide-react";
 import { Panel } from "@/components/Panel";
@@ -12,8 +12,9 @@ import { JsonPreview } from "@/components/JsonPreview";
 import { StatusBadge } from "@/components/StatusBadge";
 import { usePipeline, useModuleRun } from "@/contexts/PipelineContext";
 import { moduleById } from "@/lib/modules";
-import { exams, timeslots } from "@/lib/data/registry";
-import { algorithmComparison, conflictGraph, fatigueReport, masterSchedule as sampleSchedule, timetableMetrics } from "@/lib/data/outputs";
+import { exams as staticExams, timeslots as staticTimeslots } from "@/lib/data/registry";
+import { algorithmComparison as staticAlgorithmComparison, conflictGraph, fatigueReport as sampleFatigueReport, masterSchedule as sampleSchedule, timetableMetrics } from "@/lib/data/outputs";
+import { api } from "@/lib/api/index";
 
 const validationChecks = [
   { rule: "No clashing exam pair shares a date + session", result: "PASS" },
@@ -23,7 +24,6 @@ const validationChecks = [
   { rule: "Parallel exams per session ≤ 3", result: "PASS" },
 ];
 
-const dates = Array.from(new Set(timeslots.map((slot) => slot.date)));
 const sessions = ["Morning", "Afternoon"];
 
 export default function Task5Page() {
@@ -33,8 +33,42 @@ export default function Task5Page() {
   const [validated, setValidated] = useState(false);
   const [pushing, setPushing] = useState(false);
   const complete = run.state === "complete";
+  
+  const [liveExams, setLiveExams] = useState(null);
+  const [liveTimeslots, setLiveTimeslots] = useState(null);
+  const [liveAlgorithmComparison, setLiveAlgorithmComparison] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.task3.getExams().then((data) => { if (!cancelled) setLiveExams(data); }).catch(() => {});
+    api.task5.getTimeslots().then((data) => { if (!cancelled) setLiveTimeslots(data); }).catch(() => {});
+    api.task5.benchmark().then((data) => { if (!cancelled && data.results) setLiveAlgorithmComparison(data.results); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const exams = liveExams ?? staticExams;
+  const timeslots = liveTimeslots ?? staticTimeslots;
+  const algorithmComparison = liveAlgorithmComparison ?? staticAlgorithmComparison;
+  
+  const dates = Array.from(new Set(timeslots.map((slot) => slot.date)));
 
   const schedule = run.data?.schedule ?? (Array.isArray(run.data) ? run.data : null) ?? sampleSchedule;
+  const fatigueReport = (() => {
+    if (!run.data || !run.data.fatigue_report) return sampleFatigueReport;
+    if (run.data.fatigue_report.breakdown) return run.data.fatigue_report;
+    const m = run.data.metrics || {};
+    const fb = m.fatigue_breakdown || {};
+    return {
+      ...run.data.fatigue_report,
+      total_fatigue_penalty: m.total_fatigue_penalty || 0,
+      soft_constraint_satisfaction_percentage: m.soft_constraint_satisfaction_percentage || 0,
+      breakdown: [
+        { label: "Back-to-back sessions", count: fb.back_to_back_same_day || 0, weight: 10, penalty: (fb.back_to_back_same_day || 0) * 10 },
+        { label: "Two exams same day", count: fb.two_exams_same_day || 0, weight: 5, penalty: (fb.two_exams_same_day || 0) * 5 },
+        { label: "Consecutive-day exams", count: fb.consecutive_day || 0, weight: 1, penalty: (fb.consecutive_day || 0) * 1 },
+      ],
+    };
+  })();
 
   const pushDownstream = async () => {
     setPushing(true);
