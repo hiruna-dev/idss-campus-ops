@@ -91,6 +91,13 @@ public class TimetableService {
     }
 
     /**
+     * Get timeslots from local JSON files.
+     */
+    public List<Timeslot> getTimeslots() throws Exception {
+        return loadJson(inputDir + "/input_timeslots.json", new TypeReference<List<Timeslot>>() {});
+    }
+
+    /**
      * Generate a timetable from an API request payload.
      */
     public Map<String, Object> generateFromRequest(TimetableRequest request, String algorithmChoice) {

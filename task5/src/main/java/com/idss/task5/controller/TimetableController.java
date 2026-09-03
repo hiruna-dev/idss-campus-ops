@@ -73,6 +73,19 @@ public class TimetableController {
     }
 
     /**
+     * GET /api/task5/timeslots
+     * Returns the configured timeslots.
+     */
+    @GetMapping("/timeslots")
+    public ResponseEntity<List<com.idss.common.model.Timeslot>> getTimeslots() {
+        try {
+            return ResponseEntity.ok(timetableService.getTimeslots());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
      * GET /api/task5/health
      * Health check endpoint.
      */
