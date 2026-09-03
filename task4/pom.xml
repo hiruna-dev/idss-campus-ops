@@ -40,6 +40,20 @@
     <version>2.5.0</version>
 </dependency>
 
+        <!-- JMH — rigorous microbenchmarking for Chapter 8/9 (MCF Section 9.1: JUnit 5 + JMH) -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
