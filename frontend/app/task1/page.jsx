@@ -16,12 +16,13 @@ import { deliveryRoutes as sampleRoutes, routingMetrics } from "@/lib/data/outpu
 import { api } from "@/lib/api/index";
 
 const FLOORS = [3, 2, 1, 0];
-const BAND_HEIGHT = 104;
-const MAP_WIDTH = 470;
+const BAND_HEIGHT = 140;
+const MAP_WIDTH = 650;
 
-const scaleX = (x) => 60 + x * 8.6;
-const bandTop = (floor) => FLOORS.indexOf(floor) * BAND_HEIGHT + 14;
-const scaleY = (node) => bandTop(node.floor) + ((node.coordinates.y - 6) / 20) * 66;
+const scaleX = (x) => x * 13.8 - 78;
+const bandTop = (floor) => FLOORS.indexOf(floor) * BAND_HEIGHT + 30;
+const mappedY = (y) => ({ 6: 0, 8: 10, 12: 30, 15: 65, 18.5: 95, 24: 115 }[y] ?? ((y - 6) / 20) * 115);
+const scaleY = (node) => bandTop(node.floor) + mappedY(node.coordinates.y);
 
 function FloorMap({ route, graph, nodeById, uniqueEdges }) {
   const pathPairs = new Set(
@@ -31,7 +32,7 @@ function FloorMap({ route, graph, nodeById, uniqueEdges }) {
 
   return (
     <svg
-      viewBox={`0 0 ${MAP_WIDTH} ${FLOORS.length * BAND_HEIGHT + 10}`}
+      viewBox={`0 0 ${MAP_WIDTH} ${FLOORS.length * BAND_HEIGHT + 30}`}
       className="h-auto w-full"
       role="img"
       aria-label={`Delivery path for ${route.dispatch_id} from ${route.source_vault} to ${route.destination_room}`}
@@ -39,7 +40,7 @@ function FloorMap({ route, graph, nodeById, uniqueEdges }) {
       {FLOORS.map((floor) => (
         <g key={floor}>
           <rect x={44} y={bandTop(floor) - 12} width={MAP_WIDTH - 56} height={BAND_HEIGHT - 14} rx={4} fill={floor % 2 === 0 ? "#F5F7FA" : "#FFFFFF"} stroke="#DCE3EA" />
-          <text x={16} y={bandTop(floor) + 26} className="mono" fontSize="10" fill="#8A98A2">
+          <text x={16} y={bandTop(floor) + 50} className="mono" fontSize="10" fill="#8A98A2">
             {floor === 0 ? "GND" : `F${floor}`}
           </text>
         </g>
@@ -78,7 +79,7 @@ function FloorMap({ route, graph, nodeById, uniqueEdges }) {
               stroke={active ? "#0F4C75" : "#B7C4CE"}
               strokeWidth={1.5}
             />
-            <text x={scaleX(node.coordinates.x)} y={scaleY(node) - 10} textAnchor="middle" className="mono" fontSize="8" fill={active ? "#0F4C75" : "#8A98A2"} fontWeight={active ? 600 : 400}>
+            <text x={scaleX(node.coordinates.x)} y={scaleY(node) + (node.coordinates.y >= 15 ? 14 : -10)} textAnchor="middle" className="mono" fontSize="8" fill={active ? "#0F4C75" : "#8A98A2"} fontWeight={active ? 600 : 400}>
               {node.node_id}
             </text>
           </g>
