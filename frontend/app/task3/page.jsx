@@ -22,17 +22,28 @@ function ConflictGraphCanvas({ graph, selected, onSelect }) {
   const radius = 138;
   const centre = { x: width / 2, y: height / 2 };
 
-  const positions = new Map(
-    graph.vertices.map((vertex, index) => {
-      const angle = (index / graph.vertices.length) * Math.PI * 2 - Math.PI / 2;
-      return [vertex.exam_id, { x: centre.x + radius * Math.cos(angle), y: centre.y + radius * Math.sin(angle) }];
-    })
-  );
+  const positions = new Map();
+  // Sample data's edges key off exam_id, but the live backend's edges key off
+  // course_code (ConflictGraphBuilder populates examRegistry/edges from
+  // exam.course_code, not exam_id) — canonicalId lets hover comparisons work
+  // against either scheme instead of only ever matching the sample one.
+  const canonicalId = new Map();
+  graph.vertices.forEach((vertex, index) => {
+    const angle = (index / graph.vertices.length) * Math.PI * 2 - Math.PI / 2;
+    const pos = { x: centre.x + radius * Math.cos(angle), y: centre.y + radius * Math.sin(angle), angle };
+    positions.set(vertex.exam_id, pos);
+    canonicalId.set(vertex.exam_id, vertex.exam_id);
+    if (vertex.course_code) {
+      positions.set(vertex.course_code, pos);
+      canonicalId.set(vertex.course_code, vertex.exam_id);
+    }
+  });
+  const canonical = (id) => canonicalId.get(id) ?? id;
 
   const isDimmed = (examId) =>
     selected !== null &&
     selected !== examId &&
-    !graph.edges.some((edge) => (edge.exam_a === selected && edge.exam_b === examId) || (edge.exam_b === selected && edge.exam_a === examId));
+    !graph.edges.some((edge) => (canonical(edge.exam_a) === selected && canonical(edge.exam_b) === examId) || (canonical(edge.exam_b) === selected && canonical(edge.exam_a) === examId));
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Exam conflict graph: vertices are exams, edges are shared students">
@@ -40,13 +51,30 @@ function ConflictGraphCanvas({ graph, selected, onSelect }) {
         const a = positions.get(edge.exam_a);
         const b = positions.get(edge.exam_b);
         if (!a || !b) return null;
-        const active = selected === null || edge.exam_a === selected || edge.exam_b === selected;
+        const active = selected === null || canonical(edge.exam_a) === selected || canonical(edge.exam_b) === selected;
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        // Fixed width, not scaled by shared_students: at these small stroke widths,
+        // anti-aliasing makes diagonal lines render visibly thinner than near-vertical/
+        // -horizontal ones at the *same* declared width, so weight-based thickness looked
+        // randomly inconsistent across the circular layout. The exact count is still
+        // shown on hover via the label below.
+        const thickness = selected && active ? 2.5 : 1.5;
         return (
           <g key={`${edge.exam_a}-${edge.exam_b}`} opacity={active ? 1 : 0.15}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={selected && active ? "#3282B8" : "#B7C4CE"} strokeWidth={1 + edge.shared_students / 8} />
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={selected && active ? "#3282B8" : "#B7C4CE"} strokeWidth={thickness} strokeLinecap="round" />
             {selected && active && (
-              <text x={mid.x} y={mid.y - 4} textAnchor="middle" className="mono" fontSize="10" fill="#0F4C75">
+              <text 
+                x={mid.x} 
+                y={mid.y - 8} 
+                textAnchor="middle" 
+                className="mono" 
+                fontSize="11" 
+                fill="#0F4C75"
+                stroke="#FFFFFF"
+                strokeWidth="3"
+                paintOrder="stroke"
+                strokeLinejoin="round"
+              >
                 {edge.shared_students}
               </text>
             )}
@@ -64,7 +92,14 @@ function ConflictGraphCanvas({ graph, selected, onSelect }) {
             <text x={position.x} y={position.y + 3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#FFFFFF">
               {vertex.degree}
             </text>
-            <text x={position.x} y={position.y + 38} textAnchor="middle" className="mono" fontSize="11" fill="#1B262C">
+            <text 
+              x={centre.x + (radius + 38) * Math.cos(position.angle)} 
+              y={centre.y + (radius + 38) * Math.sin(position.angle) + 4} 
+              textAnchor="middle" 
+              className="mono" 
+              fontSize="11" 
+              fill="#1B262C"
+            >
               {vertex.course_code}
             </text>
           </g>
