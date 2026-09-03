@@ -9,8 +9,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="antialiased min-h-screen bg-canvas text-ink">
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-canvas text-ink" suppressHydrationWarning>
         <PipelineProvider>
           <AppShell>{children}</AppShell>
         </PipelineProvider>
