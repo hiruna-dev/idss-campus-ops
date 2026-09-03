@@ -12,6 +12,9 @@ import com.idss.task4.dto.RoomScore;
 import com.idss.task4.repository.RoomRankingDocument;
 import com.idss.task4.repository.RoomRankingRepository;
 
+import com.idss.common.util.JsonLoader;
+import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +47,9 @@ public class RankingService {
     private static final String ROOMS_COLLECTION = "rooms";
     private static final String ALGORITHM_LABEL = "AHP (weights) + TOPSIS (ranking)";
 
+    @Value("${task4.input.room-master-path:data/input/input_room_master.json}")
+    private String roomMasterPath;
+
     private RoomRegistry roomRegistry;
     private final FilterEngine filterEngine;
     private final AHPEngine ahpEngine;
@@ -64,17 +70,16 @@ public class RankingService {
 
     /**
      * Loads the room master data at startup and builds the HashMap registry.
-     *
-     * <p>Reads from the {@code rooms} Mongo collection (master_context_file.md
-     * Section 5), seeded by {@code DatabaseSeeder} from {@code input_room_master.json}.
-     * Local JSON files are used only for algorithm benchmarking (MCF Section 2.3/9.1),
-     * not for this production path.</p>
      */
     @PostConstruct
     public void init() {
-        List<Room> rooms = mongoTemplate.findAll(Room.class, ROOMS_COLLECTION);
-        this.roomRegistry = new RoomRegistry(rooms);
-        System.out.println("[Task4] RoomRegistry loaded: " + roomRegistry.size() + " rooms from Mongo '" + ROOMS_COLLECTION + "' collection");
+        try {
+            List<Room> rooms = JsonLoader.loadList(roomMasterPath, Room.class);
+            this.roomRegistry = new RoomRegistry(rooms);
+            System.out.println("[Task4] RoomRegistry loaded: " + roomRegistry.size() + " rooms from JSON '" + roomMasterPath + "'");
+        } catch (Exception e) {
+            System.err.println("[Task4] Failed to load RoomRegistry from JSON: " + e.getMessage());
+        }
     }
 
     /**
@@ -154,16 +159,15 @@ public class RankingService {
      * @return list of RoomReference DTOs
      */
     public List<RoomReference> generateRoomReference() {
-        List<RoomReference> references = new ArrayList<>();
-        for (Room room : roomRegistry.getAllRooms()) {
-            references.add(new RoomReference(
-                    room.room_id,
-                    room.room_name,
-                    room.floor,
-                    room.is_accessible
-            ));
+        List<RoomReference> refs = new ArrayList<>();
+        for (Room r : roomRegistry.getAllRooms()) {
+            refs.add(new RoomReference(r.room_id, r.room_name, r.floor, r.is_accessible));
         }
-        return references;
+        return refs;
+    }
+
+    public java.util.Collection<Room> getAllRooms() {
+        return roomRegistry.getAllRooms();
     }
 
     /**

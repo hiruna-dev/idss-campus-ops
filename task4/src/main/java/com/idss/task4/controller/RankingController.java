@@ -146,6 +146,14 @@ public class RankingController {
     }
 
     /**
+     * Returns the full static room master for frontend details (capacity, AC, noise).
+     */
+    @GetMapping("/rooms")
+    public ResponseEntity<java.util.Collection<com.idss.common.model.Room>> getRooms() {
+        return ResponseEntity.ok(rankingService.getAllRooms());
+    }
+
+    /**
      * Health check (master_context_file.md Section 10).
      */
     @GetMapping("/health")
